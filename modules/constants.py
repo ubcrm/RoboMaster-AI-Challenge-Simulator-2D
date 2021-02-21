@@ -21,7 +21,7 @@ class ROBOT:
     motion = 6
     rotate_motion = 4
     yaw_motion = 1
-    bullet_speed = 12.5
+    bullet_speed = 20
     rebound_coeff = 0.6
 
 
