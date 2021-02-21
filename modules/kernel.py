@@ -36,7 +36,7 @@ class Kernel(object):
         self.car_count = robot_count
         self.render = render
         self.record = record
-        self.time, self.obs, self.compet_info, self.bullets, self.epoch, self.n, self.stat, self.memory, self.robots = None, None, None, None, None, None, None, None, None
+        self.time, self.obs, self.compet_info, self.bullets, self.epoch, self.n, self.stat, self.memory, self.robots, self.end = None, None, None, None, None, None, None, None, None, None
         self.zones = Zones()
         self.reset()
 
@@ -55,6 +55,7 @@ class Kernel(object):
         self.bullets = []
         self.epoch = 0
         self.n = 0
+        self.end = None    # winning team
         self.stat = False
         self.memory = []
         self.robots = [Robot() for _ in range(self.car_count)]
@@ -63,11 +64,17 @@ class Kernel(object):
 
     def play(self):
         assert self.render, 'play() requires render==True'
-        while True:
+        while self.end is None:
             if not self.epoch % 10:
                 if self.receive_commands():
                     break
             self.one_epoch()
+
+        # TODO - make end screen with this info
+        if self.end != 'draw':
+            print(f'match end, {self.end} team won!')
+        else:
+            print('match end, draw :(')
 
     def step(self, commands):
         for robot, command in zip(self.robots, commands):
@@ -78,8 +85,11 @@ class Kernel(object):
 
     def one_epoch(self):
         pygame.time.wait(2)
+        dead_b, dead_r = 0, 0
         for robot in self.robots:  # update robots
             if robot.hp == 0:
+                dead_b += robot.is_blue
+                dead_r += not robot.is_blue
                 continue
             if not self.epoch % 10:
                 robot.commands_to_actions()
@@ -99,11 +109,30 @@ class Kernel(object):
             robot.heat = max(robot.heat, 0)
             robot.hp = max(robot.hp, 0)
 
+        if dead_b == Robot.count_blue and dead_r == Robot.count_red:
+            self.end = 'draw'
+        elif dead_b == Robot.count_blue:
+            self.end = 'red'
+        elif dead_r == Robot.count_red:
+            self.end = 'blue'
+
         if not self.epoch % 200:
             self.time -= 1
+            if self.time <= 0:
+                hp = 0
+                for robot in self.robots:
+                    hp += robot.hp if robot.is_blue else -robot.hp
+
+                if hp > 0:
+                    self.end = 'blue'
+                elif hp == 0:
+                    self.end = 'draw'
+                else:
+                    self.end = 'red'
+
         if not self.epoch % 12000:
             self.zones.reset()
-        
+
         i = 0
         while i < len(self.bullets):  # update bullets
             if self.move_bullet(self.bullets[i]):
