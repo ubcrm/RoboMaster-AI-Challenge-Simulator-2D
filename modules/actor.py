@@ -3,7 +3,7 @@ import pickle
 
 # Indices of important robot properties in state.agents[car_num]
 from modules.robot import Robot
-from modules.waypoints.nav_graph import NavigationGraph
+from modules.waypoints.navigator import NavigationGraph
 
 OWNER = 0
 POS_X = 1
