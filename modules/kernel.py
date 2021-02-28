@@ -69,18 +69,16 @@ class Kernel(object):
                 if self.receive_commands():
                     break
             self.one_epoch()
-
-        # TODO - make end screen with this info
-        if self.end != 'draw':
-            print(f'match end, {self.end} team won!')
-        else:
-            print('match end, draw :(')
+        self._end()
 
     def step(self, commands):
         for robot, command in zip(self.robots, commands):
             robot.commands = command
         for _ in range(10):
             self.one_epoch()
+            if self.end is not None:
+                self._end()
+                break
         return State(self.time, self.robots)
 
     def one_epoch(self):
@@ -267,3 +265,9 @@ class Kernel(object):
 
     def save_record(self, file):
         np.save(file, self.memory)
+
+    def _end(self):
+        if self.end != 'draw':
+            print(f'match end, {self.end} team won!')
+        else:
+            print('match end, draw :(')
