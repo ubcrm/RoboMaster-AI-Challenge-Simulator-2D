@@ -59,3 +59,7 @@ class IMAGE:
     gimbal = 'images/robot/gimbal.png'
     stats_panel = 'images/stats_panel.png'
     logo = 'images/logo.png'
+
+
+class FILE:
+    transitions = 'records/transitions.json'

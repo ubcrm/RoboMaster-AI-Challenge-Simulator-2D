@@ -1,2 +1,4 @@
-*.npy
+records/*.json
+records/*.npy
 .idea
+*__pycache__

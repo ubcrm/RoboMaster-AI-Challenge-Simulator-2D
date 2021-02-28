@@ -44,7 +44,8 @@ class Zones:
 
         for i in range(3):
             side = random.choice([0, 1])  # choose left/right side of field
-            self.types[2 * i: 2 * i + 1] = [indices[i] + side, indices[i] + 1 - side]
+            self.types[2 * i] = indices[i] + side
+            self.types[2 * i + 1] = indices[i] + 1 - side
 
     @staticmethod
     def _apply_buff_debuff(activating_robot, robots, type_):  # Buff/Debuff (Rules 2.3.1)

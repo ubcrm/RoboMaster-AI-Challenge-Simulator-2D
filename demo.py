@@ -3,8 +3,9 @@ from modules.actor import Actor
 import numpy as np
 
 if __name__ == '__main__':
-    game = Rmaics(agent_num=4, render=True)
+    game = Rmaics(agent_num=1, render=True)
     game.play()
+    game.save_record('records/transitions.json')
 
 # game.save_record('./records/record0.npy')
 # player = record_player()
