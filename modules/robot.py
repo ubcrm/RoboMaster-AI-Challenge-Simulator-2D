@@ -3,7 +3,7 @@ import pygame
 from typing import Union
 from modules.cache import Cache
 from modules.constants import *
-from modules.geometry import mirror, Line, Rectangle
+from modules.geometry import mirror, distance, Line, Rectangle
 
 chassis_outline = [Line(mirror(ROBOT.chassis_points[0], flip_x=x, flip_y=y),
                         mirror(ROBOT.chassis_points[1], flip_x=x, flip_y=y), COLOR.green) for x in [0, 1] for y in [0, 1]] + \
@@ -40,6 +40,7 @@ class Robot:
         self.barrier_hits = 0
         self.bullet_hits = 0
         self.robot_hits = 0
+        self.just_shot = False
         self.commands = np.zeros(5, dtype=np.int8)  # x, y, rotate, yaw, shoot
         self.actions = np.zeros(5, dtype=np.float32)  # rotate_speed, yaw_speed, x_speed, y_speed, shoot
 

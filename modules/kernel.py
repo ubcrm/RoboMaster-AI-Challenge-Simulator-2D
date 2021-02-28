@@ -97,6 +97,9 @@ class Kernel(object):
             if not self.epoch % 200 and robot.timeout > 0:
                 robot.timeout -= 1
 
+            if not self.epoch % 20 and robot.just_shot:
+                robot.just_shot = False
+
             if not self.epoch % 20:  # Barrel Heat (Rules 4.1.2)
                 if robot.heat >= 360:
                     robot.hp -= (robot.heat - 360) * 40
@@ -176,10 +179,11 @@ class Kernel(object):
                 robot.actions[3] = -robot.actions[3] * ROBOT.rebound_coeff
                 robot.center[1] = old_y
 
-        if robot.actions[4] and robot.ammo and robot.can_shoot:  # handle firing
+        if robot.actions[4] and robot.ammo and robot.can_shoot and not robot.just_shot:  # handle firing
             robot.ammo -= 1
             self.bullets.append(Bullet(robot.center, robot.yaw + robot.angle, robot.id_))
             robot.heat += ROBOT.bullet_speed
+            robot.just_shot = True
 
     def move_bullet(self, bullet: Bullet):
         old_center = bullet.center.copy()
