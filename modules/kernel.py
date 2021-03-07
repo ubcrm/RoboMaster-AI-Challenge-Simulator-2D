@@ -33,7 +33,7 @@ def normalize_angle(angle):
 
 
 class Kernel(object):
-    def __init__(self, robot_count, render=False, record=True):
+    def __init__(self, robot_count=4, render=False, record=True):
         self.car_count = robot_count
         self.render = render
         self.record = record

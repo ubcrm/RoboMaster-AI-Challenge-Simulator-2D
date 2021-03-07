@@ -23,14 +23,12 @@ Note: `acts` in `kernel` is different from `actions` in `rmaics`, and
 ### 1. Running speed
 
 The following are the current test results without visualization:
-
-|Car Number|Motion Command|Simulation Time|Program Running Time|
-|-|-|-|-|
-|1|full|3min|8.2s|
-|2|full|3min|17.1s|
-|3|full|3min|25.5s|
-|4|full|3min|51.2s|
-
+| Car Number | Motion Command | Simulation Time | Program Running Time |
+| --- | - | --- | - |
+| 1 | full | 3min | 8.2s |
+| 2 | full | 3min | 17.1s |
+| 3 | full | 3min | 25.5s |
+| 4 | full | 3min | 51.2s |
 The test environment is: Windows 10, octa-core i5-8250U CPU 1.60GHz; CPU usage: ~20%. Note that no matter 
 what program is running, the CPU usage is about 20%. This is just to show the actual CPU power used during the test.
 
