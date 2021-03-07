@@ -55,8 +55,10 @@ if __name__ == "__main__":
     graph.draw_edges(image)
     graph.draw_nodes(image)
 
-    avoid = [5, 32, 6]
-    path = navigator.navigate(0, 31, avoid_nodes=avoid)
+    #avoid = [5, 32, 6]
+    #path = navigator.navigate(0, 31, avoid_nodes=avoid)
+    avoid = [16, 22]
+    path = navigator.navigate(0, 9, avoid_nodes=avoid)
 
     if path is not None:
         points = navigator.interpolate(path)
