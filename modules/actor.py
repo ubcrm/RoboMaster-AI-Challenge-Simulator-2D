@@ -12,6 +12,7 @@ ANGLE = 3
 YAW = 4
 BULLET_COUNT = 10
 
+
 class Actor:
     def __init__(self, car_num, robot):
         self.car_num = car_num
@@ -21,6 +22,18 @@ class Actor:
         self.destination = None
         self.nav = NavigationGraph()
         self.robot = robot
+
+        # TODO replace dummy values with proper ones representing starting state
+        self.next_state_commands = {}
+        self.has_ammo = False
+        self.not_shooting = True
+        self.has_buff = False
+        self.is_at_centre = False
+        self.centre_waypoint = None
+        self.is_at_spawn_zone = False
+        self.spawn_waypoint = None
+        self.buff_waypoint = None
+        self.ammo_waypoint = None
     
     def commands_from_state(self, state):
         """Given the current state of the arena, determine what this robot should do next
@@ -66,3 +79,121 @@ class Actor:
         # TODO: Implement this using the waypoint system to hop in the
         #       direction of the destination
         return 1, 0, 0
+
+    def take_action(self):
+        """
+        Called on every frame by the Actor, it first updates the board state as stored in Actor memory
+        Then it checks the current robot state to determine what the next line of action should be.
+        It then accordingly modifies the next state command that is returned to kernel on every frame
+        :return: The decisions to be made in the next time frame
+        """
+        self.update_board_zones()
+        if self.has_ammo:
+            if self.is_buff_zone_active():
+                if self.has_buff:
+                    if self.is_at_centre:
+                        self.wait()
+                    else:
+                        self.move_to(self.centre_waypoint)
+                else:
+                    self.move_to(self.buff_waypoint)
+            else:
+                if self.is_at_centre:
+                    self.wait()
+                else:
+                    self.move_to(self.centre_waypoint)
+        else:
+            if self.is_supply_zone_active():
+                self.rush_to(self.ammo_waypoint)
+            else:
+                self.rush_to(self.spawn_waypoint)
+
+        return self.next_state_commands
+
+    def update_board_zones(self):
+        """
+        Updates the Actor's brain with known values of the buff/debuff zones
+        :return:
+        """
+        """
+        TODO Dummy function
+        Can either be called on every 60, 120 and 180 second time mark if competition time info is passed
+        to the robot, or manually checking if there is a mismatch between Actor brain and board zone's as passed in
+        by outpost/competition info, and updating Actor brain accordingly
+        """
+        pass
+
+    def scan_for_enemies(self):
+        """
+        TODO scans the nearby vicinity of the robot using LiDAR + Camera implementation and returns a list
+        of enemies that can be aimed at
+        :return:
+        """
+        return {}
+
+    def aim_then_shoot(self, enemies_found):
+        """
+        TODO Given the list of enemies that are nearby, modify the next_state_command such that the robot
+        :param enemies_found:
+        :return:
+        """
+        pass
+
+    def set_waypoint(self, waypoint):
+        """
+        TODO Marks the specified waypoint as a point to navigate to in the robot's internal navigation system
+        :param waypoint:
+        :return:
+        """
+        pass
+
+    def wait(self):
+        """
+        TODO Scan's the robot's nearby environment for enemies to shoot, does not move
+        :return:
+        """
+        scanned_enemies = self.scan_for_enemies()
+        if scanned_enemies is not None:
+            self.aim_then_shoot(scanned_enemies)
+        else:
+            # Does not make changes to next_state_command
+            pass
+
+
+    def move_to(self, waypoint):
+        """
+        TODO Scans the robot's nearby environment for enemies to shoot and sets the robots next_state_commands
+        such that it moves towards its set waypoint
+        :param waypoint:
+        :return:
+        """
+        scanned_enemies = self.scan_for_enemies()
+        if scanned_enemies is not None:
+            self.aim_then_shoot(scanned_enemies)
+        else:
+            # TODO Insert navigation implementation
+            pass
+
+    def rush_to(self, waypoint):
+        """
+        TODO Sets robot to navigate to the specified waypoint without checking for enemies
+        :param waypoint:
+        :return:
+        """
+        pass
+
+    def is_supply_zone_active(self):
+        """
+        TODO Checks if the supply zone is has not been activated yet from the current board zone info
+        :return:
+        """
+        pass
+
+    def is_buff_zone_active(self):
+        """
+        TODO Checks if the ammo zone has not been activated yet from the current board zone info
+        :return:
+        """
+        pass
+
+
