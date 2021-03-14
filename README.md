@@ -24,7 +24,7 @@ The `get_observation` and `get_reward` functions need to be customized.
 
 
 The following manuals are provided for further information.
-* High-level training interface in `rmaics.py`: [rmaics_manual.md]()
+* High-level training interface in `rmaics.py`: [rmaics.md]()
 * Low-level simulation implementation in `kernel.py`: [kernel.md](docs/kernel.md)
 * Instructions for `record player`: [record_player.md]()
 * Instructions for controls: [operation.md]()

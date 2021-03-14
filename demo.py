@@ -1,11 +1,20 @@
+# import os
+# os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+
 from modules.rmaics import Rmaics
 from modules.actor import Actor
 import numpy as np
+import time
+
 
 if __name__ == '__main__':
-    game = Rmaics(agent_num=4, render=True)
+    start_time = time.time()
+    game = Rmaics(agent_num=1, render=True)
+
     game.play()
-    game.save_record('records/transitions.json')
+
+    print(f'Execution time: {int(time.time() - start_time)}s')
+    # game.save_record('records/transitions.json')
 
 # game.save_record('./records/record0.npy')
 # player = record_player()

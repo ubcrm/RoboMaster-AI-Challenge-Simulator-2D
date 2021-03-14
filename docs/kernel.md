@@ -1,6 +1,6 @@
 # Kernel Manual
 
-### 1. Kernel Parameters
+## 1. Kernel Parameters
 | Item | Value | Description |
 | --- | :---: | --- |
 | Simulation frame frequency | 200Hz | epochs per second |
@@ -14,7 +14,7 @@
 | Bullet flying speed | 12.5p/epoch | 25m/s real-world |
 | Barrel heat settlement frequency | 10Hz | - |
 
-### 2. Implementation Notes
+## 2. Implementation Notes
 
 1. The speed of the chassis and pan/tilt will gradually increase to the maximum after pressing 
 the corresponding command, and the speed will gradually decrease after the command is stopped.

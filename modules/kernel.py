@@ -88,7 +88,7 @@ class Kernel(object):
         return State(self.time, self.zones, self.robots)
 
     def one_epoch(self):
-        pygame.time.wait(2)
+        # pygame.time.wait(2)
         for robot in self.robots:  # update robots
             if robot.hp == 0:
                 continue
@@ -128,7 +128,7 @@ class Kernel(object):
         self.epoch += 1
         if self.record:
             bullets = [Bullet(b.center, b.angle, b.owner_id) for b in self.bullets]
-            self.memory.append(Record(self.time, self.robots.copy(), bullets))
+            # self.memory.append(Record(self.time, self.robots.copy(), bullets))
         if self.render:
             self.draw()
 
