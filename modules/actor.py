@@ -1,9 +1,10 @@
 import numpy as np
-import pickle
+import pathlib
 
 # Indices of important robot properties in state.agents[car_num]
 from modules.robot import Robot
 from modules.waypoints.navigator import NavigationGraph
+from modules.waypoints.navigator import Navigator
 
 OWNER = 0
 POS_X = 1
@@ -20,7 +21,7 @@ class Actor:
         self.prev_commands = None
         self.next_waypoint = None
         self.destination = None
-        self.nav = NavigationGraph()
+        self.nav = Navigator(pathlib.Path('modules', 'waypoints', 'data.json'))
         self.robot = robot
 
         # TODO replace dummy values with proper ones representing starting state
@@ -39,46 +40,64 @@ class Actor:
         """Given the current state of the arena, determine what this robot should do next
         using a simple rule-based algorithm. These commands are represented as an array of numbers,
         which are interpreted by game.step()"""
-        # return [forward, side, rotate, rotate gun barrel, shoot]
         x = y = rotate = yaw = shoot = 1
 
-        # if self.robot.ammo == 0:
-            # supply_zone = g_map.areas[self.team][1]
-            # supply_zone_x = np.mean(supply_zone[:2])
-            # supply_zone_y = np.mean(supply_zone[2:])
-            # self.set_destination((supply_zone_x, supply_zone_y))
-        # elif np.sum(state.vision[self.car_num]) > 0:
-            # #TODO: Change this condition so it ignores friendly robots
-            # enemy_coords = g_map.areas[self.team][1]
-            # enemy_x = np.mean(enemy_coords[:2])
-            # enemy_y = np.mean(enemy_coords[2:])
-            # self.set_destination((enemy_x, enemy_y))
-            #
-            # shoot = 1
-        
-        # x,y,rotate = self.navigate()
+        destination = np.array([756, 217])
+        pos = self.nearest_waypoint(self.robot.center)
+        dest = self.nearest_waypoint(destination)
+        x, y, rotate = self.navigate(state, pos, dest, [17, 20])
 
         commands = [x, y, rotate, yaw, shoot]
         
         self.prev_commands = commands
         return commands
 
-    @property
-    def current_waypoint(self):
-        return self.nav.get_nearest_waypoint(self.current_robot.center)
+    '''
+       @arg pos should be np.array([x, y])
+    '''
+    def nearest_waypoint(self, pos):
+        return np.argmin([np.linalg.norm(node - pos) for node in self.nav.nodes])
 
-    def get_path(self, target_pos):
-        return self.nav.calculate_path(self.current_waypoint, self.nav.get_nearest_waypoint(target_pos))
+    def get_path(self, from_waypoint, to_waypoint, avoid_nodes=None):
+        path = self.nav.navigate(from_waypoint, to_waypoint, avoid_nodes)
+        return self.nav.interpolate(path, 20) if path is not None else None
 
+    '''
+        Sets the destination to the nearest waypoint, stored as the waypoint number
+        @arg dest should be np.array([x, y])
+    '''
     def set_destination(self, dest):
-        """Update the robots (x,y) destination co-ordinates"""
-        nav_path = self.get_path(dest)
-    
-    def navigate(self):
-        """Pathfind to the destination. Returns the x,y,rotation values"""
-        # TODO: Implement this using the waypoint system to hop in the
-        #       direction of the destination
-        return 1, 0, 0
+        '''Update the robots (x,y) destination co-ordinates'''
+        self.destination = self.nearest_waypoint(dest)
+
+    def navigate(self, state, from_waypoint, to_waypoint, avoid_nodes=None):
+        '''Pathfind to the destination. Returns the x,y,rotation values'''
+        path = self.get_path(from_waypoint, to_waypoint, avoid_nodes)
+        if path is None:
+            return 0, 0, 0
+
+        target = [path[0][1], path[1][1]]
+        pos_x = state.robots[0].center[0]
+        pos_y = state.robots[0].center[1]
+        pos_angle = state.robots[0].angle
+
+        '''
+        :current navigation:
+        - if target is in a 90 degree cone that extends out from the front of the robot, go forward
+        - else, dont move, just turn
+        '''
+        angle_diff = np.abs(
+            np.array(-np.arctan((target[1] - pos_y) / (target[0] - pos_x)) - pos_angle * np.pi / 180)) * 180 / np.pi
+        print('-------')
+        print(-np.arctan2(-(target[1] - pos_y), (target[0] - pos_x)))
+        print(pos_angle * np.pi / 180)
+        print(angle_diff)
+        print('-------')
+
+        if np.abs(angle_diff) > 45:
+            return 0, 0, np.sign(angle_diff)
+        else:
+            return np.sign(target[0] - pos_x), np.sign(target[1] - pos_y), np.sign(angle_diff)
 
     def take_action(self):
         """
@@ -139,14 +158,6 @@ class Actor:
         """
         pass
 
-    def set_waypoint(self, waypoint):
-        """
-        TODO Marks the specified waypoint as a point to navigate to in the robot's internal navigation system
-        :param waypoint:
-        :return:
-        """
-        pass
-
     def wait(self):
         """
         TODO Scan's the robot's nearby environment for enemies to shoot, does not move
@@ -158,7 +169,6 @@ class Actor:
         else:
             # Does not make changes to next_state_command
             pass
-
 
     def move_to(self, waypoint):
         """
@@ -172,6 +182,7 @@ class Actor:
             self.aim_then_shoot(scanned_enemies)
         else:
             # TODO Insert navigation implementation
+            # self.navigate(state, self.current_waypoint, self.destination)
             pass
 
     def rush_to(self, waypoint):
