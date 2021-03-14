@@ -1,8 +1,8 @@
 # Rmaics Manual
 
-## 1. Training neural networks
+## 1. Training Neural Networks
 
-Customize the `get_observation` and `get_reward` functions of `rmaics.py` according to your needs.
+Customize the `get_observation` and `get_reward` functions per your needs.
 
 
 ## 2. Running and testing
