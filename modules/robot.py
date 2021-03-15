@@ -166,3 +166,6 @@ class Robot:
             'bullet_hits': self.bullet_hits,
             'robot_hits': self.robot_hits
         }
+
+    def status_list(self):  # for navigation transitions
+        return [float(self.center[0]), float(self.center[1]), self.angle]

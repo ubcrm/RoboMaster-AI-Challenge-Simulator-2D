@@ -1,11 +1,12 @@
 import pygame
 import numpy as np
 import time
+import json
 from modules.objects import *
 from modules.bullet import Bullet
 from modules.robot import Robot
 from modules.zones import Zones
-from modules.geometry import distance, Line, Rectangle
+from modules.geometry import distance, mirror, Line, Rectangle
 from modules.constants import *
 
 C1 = Rectangle(100, 100, -354, -174, image='images/area/blue.png')
@@ -32,11 +33,11 @@ def normalize_angle(angle):
 
 
 class Kernel(object):
-    def __init__(self, robot_count, render=False, record=True):
+    def __init__(self, robot_count=4, render=False, record=True):
         self.car_count = robot_count
         self.render = render
         self.record = record
-        self.time, self.obs, self.compet_info, self.bullets, self.epoch, self.n, self.stat, self.memory, self.robots = None, None, None, None, None, None, None, None, None
+        self.time, self.bullets, self.epoch, self.n, self.stat, self.memory, self.transitions, self.robots = None, None, None, None, None, None, None, None
         self.zones = Zones()
         self.reset()
 
@@ -51,22 +52,32 @@ class Kernel(object):
 
     def reset(self):
         self.time = FIELD.match_duration
-        self.obs = np.zeros((self.car_count, 17), dtype=np.float32)
         self.bullets = []
         self.epoch = 0
         self.n = 0
         self.stat = False
         self.memory = []
+        self.transitions = []
         self.robots = [Robot() for _ in range(self.car_count)]
         self.zones.reset()
-        return State(self.time, self.robots)
+        return State(self.time, self.zones, self.robots)
 
     def play(self):
         assert self.render, 'play() requires render==True'
+        state = None
+
         while True:
             if not self.epoch % 10:
+                if state is not None:
+                    new_reward = [distance(r.center, mirror(FIELD.spawn_center)) for r in self.robots]
+                    transition = Transition(State(self.epoch / 200, self.zones, self.robots), state, actions,
+                                            [o - n for n, o in zip(new_reward, reward)][0])
+                    self.transitions.append(transition)
                 if self.receive_commands():
                     break
+                state = State(self.epoch / 200, self.zones, self.robots)
+                actions = [r.commands[:3].tolist() for r in self.robots]
+                reward = [distance(r.center, mirror(FIELD.spawn_center)) for r in self.robots]
             self.one_epoch()
 
     def step(self, commands):
@@ -74,10 +85,10 @@ class Kernel(object):
             robot.commands = command
         for _ in range(10):
             self.one_epoch()
-        return State(self.time, self.robots)
+        return State(self.time, self.zones, self.robots)
 
     def one_epoch(self):
-        pygame.time.wait(2)
+        # pygame.time.wait(2)
         for robot in self.robots:  # update robots
             if robot.hp == 0:
                 continue
@@ -117,7 +128,7 @@ class Kernel(object):
         self.epoch += 1
         if self.record:
             bullets = [Bullet(b.center, b.angle, b.owner_id) for b in self.bullets]
-            self.memory.append(Record(self.time, self.robots.copy(), bullets))
+            # self.memory.append(Record(self.time, self.robots.copy(), bullets))
         if self.render:
             self.draw()
 
@@ -200,11 +211,11 @@ class Kernel(object):
         pygame.display.flip()
 
     def receive_commands(self):
+        pressed = pygame.key.get_pressed()
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if (event.type == pygame.QUIT) or pressed[pygame.K_ESCAPE]:
                 return True
 
-        pressed = pygame.key.get_pressed()
         if pressed[pygame.K_1]: self.n = 0
         if pressed[pygame.K_2]: self.n = 1
         if pressed[pygame.K_3]: self.n = 2
@@ -240,5 +251,7 @@ class Kernel(object):
                 return True
         return False
 
-    def save_record(self, file):
-        np.save(file, self.memory)
+    def save_record(self, file_name):
+        # np.save(file, self.memory)
+        with open(file_name, 'w+') as file:
+            json.dump([vars(t) for t in self.transitions], file, indent=2)
