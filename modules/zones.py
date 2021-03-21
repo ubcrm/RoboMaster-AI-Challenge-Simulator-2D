@@ -1,7 +1,7 @@
 import random
 import pygame
 import time
-from modules.cache import Cache
+from types import SimpleNamespace
 from modules.constants import *
 from modules.geometry import Rectangle, mirror
 
@@ -26,7 +26,7 @@ class Zones:
 
     def draw(self, screen):
         if self.cache is None:
-            self.cache = Cache(
+            self.cache = SimpleNamespace(
                 inactive_image=pygame.image.load(IMAGE.inactive_zone).convert_alpha(),
                 activated_image=pygame.image.load(IMAGE.activated_zone).convert_alpha(),
                 icon_images=[pygame.image.load(IMAGE.zone_icon.format(k)).convert_alpha() for k in ZONE.types.keys()],

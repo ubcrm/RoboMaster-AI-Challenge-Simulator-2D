@@ -1,6 +1,6 @@
 import pygame
 import numpy as np
-from modules.cache import Cache
+from types import SimpleNamespace
 from modules.constants import *
 
 
@@ -49,7 +49,7 @@ class Line:
 
     def draw(self, screen):
         if self.cache is None:
-            self.cache = Cache(start=to_draw_coords(self.p1), end=to_draw_coords(self.p2))
+            self.cache = SimpleNamespace(start=to_draw_coords(self.p1), end=to_draw_coords(self.p2))
         pygame.draw.line(screen, self.color, self.cache.start, self.cache.end)
 
     def intersects(self, line: 'Line'):
@@ -90,7 +90,7 @@ class Rectangle:
     def draw(self, screen: pygame.Surface):
         if self.cache is None:
             assert self.image is not None, 'need an image file to draw'
-            self.cache = Cache(rect=self.pygame_rect(), image=pygame.image.load(self.image))
+            self.cache = SimpleNamespace(rect=self.pygame_rect(), image=pygame.image.load(self.image))
         screen.blit(self.cache.image, self.cache.rect)
 
     def contains(self, point, strict=False):

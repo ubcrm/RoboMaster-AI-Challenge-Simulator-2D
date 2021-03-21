@@ -1,7 +1,7 @@
 import numpy as np
 import pygame
 from typing import Union
-from modules.cache import Cache
+from types import SimpleNamespace
 from modules.constants import *
 from modules.geometry import mirror, to_draw_coords, Line, Rectangle
 
@@ -56,7 +56,7 @@ class Robot:
 
     def draw(self, screen: pygame.Surface, font: pygame.font.Font, stat=False):
         if Robot.cache is None:
-            Robot.cache = Cache(
+            Robot.cache = SimpleNamespace(
                 blue_chassis_image=pygame.image.load(IMAGE.blue_robot).convert_alpha(),
                 red_chassis_image=pygame.image.load(IMAGE.red_robot).convert_alpha(),
                 dead_chassis_image=pygame.image.load(IMAGE.dead_robot).convert_alpha(),
