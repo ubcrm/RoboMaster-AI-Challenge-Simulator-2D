@@ -82,27 +82,54 @@ class Actor:
         if path is None:
             return 0, 0, 0
 
-        target = [path[0][1], path[1][1]]
-        pos_x = state.robots[0].center[0]
-        pos_y = state.robots[0].center[1]
-        pos_angle = state.robots[0].rotation
+        pos_angle = state.robots[0].angle
+        pos_vec = np.array([np.cos(pos_angle * np.pi / 180), np.sin(pos_angle * np.pi / 180)])
+        pos = np.array(state.robots[0].center)
+        target = np.array([path[0][-1], path[1][-1]])
+
+        for t_x, t_y in zip(path[0], path[1]):
+            if np.linalg.norm(target - np.array([t_x, t_y])) < np.linalg.norm(target - pos):
+                target = np.array([t_x, t_y])
+                break
+
+        print('-------')
+        print(pos)
+        print(target)
+        target_angle = np.arctan2(target[1] - pos[1], target[0] - pos[0])
+        target_vec = np.array([np.cos(target_angle), np.sin(target_angle)])
+        print(pos_vec)
+        print(target_vec)
 
         '''
         :current navigation:
         - if target is in a 90 degree cone that extends out from the front of the robot, go forward
         - else, dont move, just turn
+        - angles for kernel, positive down, negative up
         '''
-        angle_diff = np.abs(np.array(-np.arctan((target[1] - pos_y)/(target[0] - pos_x)) - pos_angle*np.pi/180))*180/np.pi
-        print('-------')
-        print(-np.arctan2(-(target[1] - pos_y), (target[0] - pos_x)))
-        print(pos_angle*np.pi/180)
-        print(angle_diff)
-        print('-------')
+        # angle_diff = np.abs(np.array(-np.arctan((target[1] - pos_y)/(target[0] - pos_x)) - pos_angle*np.pi/180))*180/np.pi - 180
 
+        # print(np.arctan2(target[1] - pos[1], target[0] - pos[0]))
+        # print(pos_angle*np.pi/180)
+        # print(angle_diff)
+
+        '''
         if np.abs(angle_diff) > 45:
             return 0, 0, np.sign(angle_diff)
         else:
             return np.sign(target[0] - pos_x), np.sign(target[1] - pos_y), np.sign(angle_diff)
+        '''
+        turn = np.arccos(np.dot(pos_vec, target_vec))
+        print(turn)
+        if abs(turn) < 0.09:
+            turn = 0
+
+        forward = 0
+        if abs(turn / np.pi * 180) < 30:
+            forward = 1
+
+        print('-------')
+        # return forward, 0, np.sign(turn)
+        return 0, 0, 0
 
     def get_property(self, state, prop):
         # TODO: Update this method to use the new standard for accessing robot properties
