@@ -13,6 +13,13 @@ ANGLE = 3
 YAW = 4
 BULLET_COUNT = 10
 
+'''
+Returns the determinant of the matrix made from two 2d column vectors, det((v0 v1))
+'''
+def det(v0, v1):
+    return v0[0]*v1[1] - v1[0]*v0[1]
+
+
 class Actor:
     def __init__(self, car_num, robot):
         self.car_num = car_num
@@ -53,8 +60,9 @@ class Actor:
         self.prev_commands = commands
         return commands
 
-
-    # @arg pos should be np.array([x, y])
+    '''
+    @arg pos should be np.array([x, y])
+    '''
     def nearest_waypoint(self, pos):
         return np.argmin([np.linalg.norm(node - pos) for node in self.nav.nodes])
 
@@ -76,9 +84,11 @@ class Actor:
         if path is None:
             return 0, 0, 0
         target = np.array([path[0][-1], path[1][-1]])
-        pos_angle = state.robots_status[0][-1]
+        pos_angle = state.robots_status[0]['rotation']
         pos_vec = np.array([np.cos(pos_angle * np.pi / 180), np.sin(pos_angle * np.pi / 180)])
-        pos = np.array(state.robots_status[0][0:2])
+        test = state.robots_status[0]
+        test2 = state.robots_status[0]['x_center']
+        pos = np.array([state.robots_status[0]['x_center'], state.robots_status[0]['y_center']])
 
         for t_x, t_y in zip(path[0], path[1]):
             if np.linalg.norm(target - np.array([t_x, t_y])) < np.linalg.norm(target - pos):
