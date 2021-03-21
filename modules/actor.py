@@ -85,7 +85,7 @@ class Actor:
         target = [path[0][1], path[1][1]]
         pos_x = state.robots[0].center[0]
         pos_y = state.robots[0].center[1]
-        pos_angle = state.robots[0].angle
+        pos_angle = state.robots[0].rotation
 
         '''
         :current navigation:

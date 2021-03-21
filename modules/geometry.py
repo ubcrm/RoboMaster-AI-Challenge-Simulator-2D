@@ -24,6 +24,10 @@ def mirror(point, flip_x=True, flip_y=True):
     return x_factor * point[0], y_factor * point[1]
 
 
+def pygame_coords(p):
+    return round(p[0] + FIELD.half_dims[0] - 0.5), round(FIELD.half_dims[1] - p[1] - 0.5)
+
+
 class Line:
     def __init__(self, point1, point2, color=COLOR.black):
         self.p1 = point1

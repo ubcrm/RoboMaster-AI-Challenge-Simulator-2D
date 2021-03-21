@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     #avoid = [5, 32, 6]
     #path = navigator.navigate(0, 31, avoid_nodes=avoid)
-    avoid = [16, 22]
+    avoid = []
     path = navigator.navigate(0, 9, avoid_nodes=avoid)
 
     if path is not None:

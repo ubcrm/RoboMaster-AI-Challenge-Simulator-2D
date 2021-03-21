@@ -1,4 +1,4 @@
-import pygame
+import os
 import numpy as np
 import time
 import json
@@ -8,6 +8,9 @@ from modules.robot import Robot
 from modules.zones import Zones
 from modules.geometry import distance, mirror, Line, Rectangle
 from modules.constants import *
+
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+import pygame  # comment when not rendering to improve performance
 
 C1 = Rectangle(100, 100, -354, -174, image='images/area/blue.png')
 C3 = Rectangle(100, 100, 354, 174, image='images/area/red.png')
@@ -24,12 +27,12 @@ low_barriers = [B2, B2.mirrored(), B5]  # areas B2, B5, B8
 high_barriers = [B1, B3, B4, B4.mirrored(), B3.mirrored(), B1.mirrored()]  # areas B1, B3, B4, B6, B7, B9
 
 
-def normalize_angle(angle):
-    if angle > 180:
-        angle -= 360
-    if angle <= -180:
-        angle += 360
-    return angle
+# def normalize_angle(angle):
+#     if angle > 180:
+#         angle -= 360
+#     if angle <= -180:
+#         angle += 360
+#     return angle
 
 
 class Kernel(object):
@@ -42,6 +45,7 @@ class Kernel(object):
         self.reset()
 
         if render:
+            import pygame
             pygame.init()
             self.screen = pygame.display.set_mode(FIELD.dims)
             pygame.display.set_caption('UBC RoboMaster AI Challenge Simulator')
@@ -51,14 +55,14 @@ class Kernel(object):
             self.clock = pygame.time.Clock()
 
     def reset(self):
-        self.time = FIELD.match_duration
+        self.time = TIME.match / TIME.unit
         self.bullets = []
         self.epoch = 0
         self.n = 0
         self.stat = False
         self.memory = []
         self.transitions = []
-        self.robots = [Robot() for _ in range(self.car_count)]
+        self.robots = [Robot(i) for i in range(self.car_count)]
         self.zones.reset()
         return State(self.time, self.zones, self.robots)
 
@@ -67,7 +71,7 @@ class Kernel(object):
         state = None
 
         while True:
-            if not self.epoch % 10:
+            if not self.epoch % TIME.step:
                 if state is not None:
                     new_reward = [distance(r.center, mirror(FIELD.spawn_center)) for r in self.robots]
                     transition = Transition(State(self.epoch / 200, self.zones, self.robots), state, actions,
@@ -83,27 +87,26 @@ class Kernel(object):
     def step(self, commands):
         for robot, command in zip(self.robots, commands):
             robot.commands = command
-        for _ in range(10):
+        for _ in range(TIME.step):
             self.one_epoch()
         return State(self.time, self.zones, self.robots)
 
     def one_epoch(self):
-        # pygame.time.wait(2)
+        pygame.time.wait(2)
         for robot in self.robots:  # update robots
             if robot.hp == 0:
                 continue
-            if not self.epoch % 10:
+            if not self.epoch % TIME.step:
                 robot.commands_to_actions()
             self.zones.apply(self.robots)
             self.move_robot(robot)
 
-            if not self.epoch % 200 and robot.timeout > 0:
+            if not self.epoch % TIME.unit and robot.timeout > 0:
                 robot.timeout -= 1
 
-            if not self.epoch % 20 and robot.just_shot:
-                robot.just_shot = False
+            robot.shot_cooldown = max(0, robot.shot_cooldown - 1)
 
-            if not self.epoch % 20:  # Barrel Heat (Rules 4.1.2)
+            if not self.epoch % TIME.heat:  # Barrel Heat (Rules 4.1.2)
                 if robot.heat >= 360:
                     robot.hp -= (robot.heat - 360) * 40
                     robot.heat = 360
@@ -113,9 +116,9 @@ class Kernel(object):
             robot.heat = max(robot.heat, 0)
             robot.hp = max(robot.hp, 0)
 
-        if not self.epoch % 200:
+        if not self.epoch % TIME.unit:
             self.time -= 1
-        if not self.epoch % 12000:
+        if not self.epoch % TIME.zone_reset:
             self.zones.reset()
         
         i = 0
@@ -133,41 +136,34 @@ class Kernel(object):
             self.draw()
 
     def move_robot(self, robot: Robot):
-        if not robot.can_shoot and robot.timeout == 0:
-            robot.can_shoot = True
-        if not robot.can_move and robot.timeout == 0:
+        if robot.timeout == 0:  # remove debuff if expired
             robot.can_move = True
+            robot.can_shoot = True
 
-        if robot.actions[0] and robot.can_move:  # rotate chassis
-            old_angle = robot.angle
-            robot.angle += robot.actions[0]
-            robot.angle = normalize_angle(robot.angle)
+        if robot.can_move and (robot.x_speed or robot.y_speed or robot.rotation_speed):  # move chassis
+            angle = robot.rotation
+            center = robot.center.copy()
+            angle_rad = np.deg2rad(robot.rotation)
+            robot.rotation = (robot.rotation + robot.rotation_speed) % 360
+            robot.center[0] += robot.x_speed * np.cos(angle_rad) - robot.y_speed * np.sin(angle_rad)
+            robot.center[1] += robot.x_speed * np.sin(angle_rad) + robot.y_speed * np.cos(angle_rad)
+
             if self.check_interference(robot):
-                robot.actions[0] = -robot.actions[0] * ROBOT.rebound_coeff
-                robot.angle = old_angle
+                robot.rotation_speed = -robot.rotation_speed * ROBOT.rebound_coeff
+                robot.x_speed *= -ROBOT.rebound_coeff
+                robot.y_speed *= -ROBOT.rebound_coeff
+                robot.rotation = angle
+                robot.center = center
 
-        if robot.actions[1]:  # rotate gimbal
-            robot.yaw += robot.actions[1]
+        if robot.yaw_speed:  # rotate gimbal
+            robot.yaw += robot.yaw_speed
             robot.yaw = np.clip(robot.yaw, -90, 90)
 
-        if (robot.actions[2] or robot.actions[3]) and robot.can_move:  # translate chassis
-            angle = np.deg2rad(robot.angle)
-            old_x, old_y = robot.center[0], robot.center[1]
-
-            robot.center[0] += robot.actions[2] * np.cos(angle) - robot.actions[3] * np.sin(angle)
-            if self.check_interference(robot):
-                robot.actions[2] = -robot.actions[2] * ROBOT.rebound_coeff
-                robot.center[0] = old_x
-            robot.center[1] += robot.actions[2] * np.sin(angle) + robot.actions[3] * np.cos(angle)
-            if self.check_interference(robot):
-                robot.actions[3] = -robot.actions[3] * ROBOT.rebound_coeff
-                robot.center[1] = old_y
-
-        if robot.actions[4] and robot.ammo and robot.can_shoot and not robot.just_shot:  # handle firing
+        if robot.commands[4] and robot.can_shoot and (robot.ammo != 0) and (robot.shot_cooldown == 0):  # handle firing
             robot.ammo -= 1
-            self.bullets.append(Bullet(robot.center, robot.yaw + robot.angle, robot.id_))
+            robot.shot_cooldown = ROBOT.shot_cooldown
             robot.heat += ROBOT.bullet_speed
-            robot.just_shot = True
+            self.bullets.append(Bullet(robot.center, robot.yaw + robot.rotation, robot.id_))
 
     def move_bullet(self, bullet: Bullet):
         old_center = bullet.center.copy()
@@ -203,10 +199,10 @@ class Kernel(object):
             stats_panel.draw(self.screen)
             for n, robot in enumerate(self.robots):
                 x_position = TEXT.stat_position[0] + n * TEXT.stat_increment[0]
-                header = self.font.render(f'robot {robot.id_}', False, COLOR.blue if robot.is_blue else COLOR.red)
+                header = self.font.render(f'robot {robot.id_}', False, COLOR.blue if (robot.is_blue) else COLOR.red)
                 self.screen.blit(header, (x_position, TEXT.stat_position[1]))
                 for i, (label, value) in enumerate(robot.status_dict().items()):
-                    data = self.font.render(f'{label}: {value:.0f}', False, COLOR.black)
+                    data = self.font.render(f'{label}: {value}', False, COLOR.black)
                     self.screen.blit(data, (x_position, TEXT.stat_position[1] + (i + 1) * TEXT.stat_increment[1]))
         pygame.display.flip()
 
@@ -220,7 +216,7 @@ class Kernel(object):
         if pressed[pygame.K_2]: self.n = 1
         if pressed[pygame.K_3]: self.n = 2
         if pressed[pygame.K_4]: self.n = 3
-        robot = self.robots[self.n]
+        robot = self.robots[min(self.n, len(self.robots) - 1)]
         robot.commands[:] = 0
 
         if pressed[pygame.K_w]: robot.commands[0] += 1
@@ -232,7 +228,7 @@ class Kernel(object):
         if pressed[pygame.K_b]: robot.commands[3] -= 1
         if pressed[pygame.K_m]: robot.commands[3] += 1
 
-        robot.commands[4] = int(pressed[pygame.K_SPACE])
+        robot.commands[4] = pressed[pygame.K_SPACE]
         self.stat = pressed[pygame.K_TAB]
         return False
 
