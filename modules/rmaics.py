@@ -18,7 +18,7 @@ class Rmaics(object):
 
         self.memory.append([commands, rewards])
         self.state = state
-        return state.time > 0
+        return state.time > 0, obs
     
     def get_observation(self, state):
         # personalize your observation here

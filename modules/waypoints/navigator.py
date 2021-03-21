@@ -56,13 +56,13 @@ if __name__ == "__main__":
     graph.draw_edges(image)
     graph.draw_nodes(image)
 
-    avoid = [4, 17, 18, 19]
+    #avoid = [4, 17, 18, 19]
     #path = navigator.navigate(0, 31, avoid_nodes=avoid)
-    # avoid = []
-    path = navigator.navigate(6, 16, avoid_nodes=avoid)
+    avoid = [17, 4]
+    path = navigator.navigate(6, 15, avoid_nodes=avoid)
 
     if path is not None:
-        points = navigator.interpolate(path)
+        points = navigator.interpolate(path, 50)
         navigator.draw_curve(image, *points)
         graph.draw_path(image, path, avoid_nodes=avoid)
         print(f'Path found: {path}')

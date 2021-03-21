@@ -13,10 +13,9 @@ ANGLE = 3
 YAW = 4
 BULLET_COUNT = 10
 
-with open('waypoints.pk', 'rb') as f:
-    data = pickle.load(f)
-    waypoints = data[0]
-    adjacency_matrix = data[1]
+
+def det(v0, v1):
+    return v0[0]*v1[1] - v1[0]*v0[1]
 
 
 class Actor:
@@ -27,7 +26,7 @@ class Actor:
         self.next_waypoint = None
         self.destination = None
         self.nav = Navigator(pathlib.Path('modules', 'waypoints', 'data.json'))
-        self.current_robot: Robot = Robot()
+        #self.current_robot: Robot = Robot()
     
     def action_from_state(self, state):
         '''Given the current state of the arena, determine what this robot should do next
@@ -52,7 +51,7 @@ class Actor:
             
             shoot = 1
         '''
-        x,y,rotate = self.navigate(state, 29, 10, [17, 20])
+        x,y,rotate = self.navigate(state, 6, 15, [17, 4])
 
         action = [x, y, rotate, yaw, shoot, supply, shoot_mode, autoaim]
         
@@ -67,7 +66,7 @@ class Actor:
 
     def get_path(self, from_waypoint, to_waypoint, avoid_nodes=None):
         path = self.nav.navigate(from_waypoint, to_waypoint, avoid_nodes)
-        return self.nav.interpolate(path, 20) if path is not None else None
+        return self.nav.interpolate(path, 5) if path is not None else None
 
     '''
         Sets the destination to the nearest waypoint, stored as the waypoint number
@@ -83,10 +82,10 @@ class Actor:
         if path is None:
             return 0, 0, 0
 
-        pos_angle = state.robots[0].angle
-        pos_vec = np.array([np.cos(pos_angle * np.pi / 180), np.sin(pos_angle * np.pi / 180)])
-        pos = np.array(state.robots[0].center)
         target = np.array([path[0][-1], path[1][-1]])
+        pos_angle = state.robots_status[0][-1]
+        pos_vec = np.array([np.cos(pos_angle * np.pi / 180), np.sin(pos_angle * np.pi / 180)])
+        pos = np.array(state.robots_status[0][0:2])
 
         for t_x, t_y in zip(path[0], path[1]):
             if np.linalg.norm(target - np.array([t_x, t_y])) < np.linalg.norm(target - pos):
@@ -107,30 +106,17 @@ class Actor:
         - else, dont move, just turn
         - angles for kernel, positive down, negative up
         '''
-        # angle_diff = np.abs(np.array(-np.arctan((target[1] - pos_y)/(target[0] - pos_x)) - pos_angle*np.pi/180))*180/np.pi - 180
-
-        # print(np.arctan2(target[1] - pos[1], target[0] - pos[0]))
-        # print(pos_angle*np.pi/180)
-        # print(angle_diff)
-
-        '''
-        if np.abs(angle_diff) > 45:
-            return 0, 0, np.sign(angle_diff)
-        else:
-            return np.sign(target[0] - pos_x), np.sign(target[1] - pos_y), np.sign(angle_diff)
-        '''
-        turn = np.arccos(np.dot(pos_vec, target_vec))
+        turn = np.arcsin(det(pos_vec, target_vec))
         print(turn)
-        if abs(turn) < 0.09:
+        if abs(turn) < 0.12:
             turn = 0
 
         forward = 0
-        if abs(turn / np.pi * 180) < 30:
+        if abs(turn / np.pi * 180) < 8:
             forward = 1
 
         print('-------')
-        # return forward, 0, np.sign(turn)
-        return 0, 0, 0
+        return forward, 0, np.sign(turn)
 
     def get_property(self, state, prop):
         # TODO: Update this method to use the new standard for accessing robot properties
