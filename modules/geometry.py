@@ -23,7 +23,7 @@ def mirror(point, flip_x=True, flip_y=True):
 
 
 def pygame_coords(p, offset=(0, 0)):
-    return round(p[0] + FIELD.half_dims[0] - 0.5 + offset[0]), round(FIELD.half_dims[1] - p[1] - 0.5 + offset[1])
+    return round(FIELD.half_dims[0] + p[0] - 0.5 + offset[0]), round(FIELD.half_dims[1] - p[1] - 0.5 + offset[1])
 
 
 class Line:
@@ -88,9 +88,7 @@ class Rectangle:
     def draw(self, screen: pygame.Surface):
         if self.cache is None:
             assert self.image is not None, 'need an image file to draw'
-            self.cache = Cache(
-                rect=self.pygame_rect(),
-                image=pygame.image.load(self.image))
+            self.cache = Cache(rect=self.pygame_rect(), image=pygame.image.load(self.image))
         screen.blit(self.cache.image, self.cache.rect)
 
     def contains(self, point, strict=False):
@@ -99,6 +97,12 @@ class Rectangle:
         return self.left < point[0] < self.right and self.top < point[1] < self.bottom
 
     def intersects(self, line: Line):
+        if any([line.p1[0] < self.left and line.p2[0] < self.left, line.p1[0] > self.right and line.p2[0] > self.right,
+                line.p1[1] < self.top and line.p2[1] < self.top, line.p1[1] > self.bottom and line.p2[1] > self.bottom]):
+            return False
+        if all([self.left < line.p1[0] < self.right, self.left < line.p2[0] < self.right,
+                self.top < line.p1[1] < self.bottom, self.top < line.p2[1] < self.bottom]):
+            return False
         sides = [line.get_side((x, y)) for x in (self.left, self.right) for y in (self.top, self.bottom)]
         if all(s < 0 for s in sides) or all(s > 0 for s in sides):
             return False
