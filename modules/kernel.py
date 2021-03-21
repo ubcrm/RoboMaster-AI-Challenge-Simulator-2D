@@ -47,6 +47,7 @@ class Kernel(object):
         self.bullets = []
         self.epoch = 0
         self.n = 0
+        self.end = None    # winning team
         self.stat = False
         self.memory = []
         self.transitions = []
@@ -71,6 +72,7 @@ class Kernel(object):
                 actions = [r.commands[:3].tolist() for r in self.robots]
                 reward = [distance(r.center, mirror(FIELD.spawn_center)) for r in self.robots]
             self.one_epoch()
+        self._end()
 
     def step(self, commands):
         for robot, command in zip(self.robots, commands):
@@ -81,8 +83,11 @@ class Kernel(object):
 
     def one_epoch(self):
         pygame.time.wait(2)
+        dead_b, dead_r = 0, 0
         for robot in self.robots:  # update robots
             if robot.hp == 0:
+                dead_b += robot.is_blue
+                dead_r += not robot.is_blue
                 continue
             if not self.epoch % TIME.step:
                 robot.commands_to_actions()
@@ -108,7 +113,7 @@ class Kernel(object):
             self.time -= 1
         if not self.epoch % TIME.zone_reset:
             self.zones.reset()
-        
+
         i = 0
         while i < len(self.bullets):  # update bullets
             if self.move_bullet(self.bullets[i]):
