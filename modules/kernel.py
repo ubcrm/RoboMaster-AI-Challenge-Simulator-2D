@@ -185,10 +185,10 @@ class Kernel(object):
             stats_panel.draw(self.screen)
             for n, robot in enumerate(self.robots):
                 x_position = TEXT.stat_position[0] + n * TEXT.stat_increment[0]
-                header = self.font.render(f'robot {robot.id_}', False, COLOR.blue if (robot.is_blue) else COLOR.red)
+                header = self.font.render(f'robot {robot.id_}', False, COLOR.blue if robot.is_blue else COLOR.red)
                 self.screen.blit(header, (x_position, TEXT.stat_position[1]))
                 for i, (label, value) in enumerate(robot.status_dict().items()):
-                    data = self.font.render(f'{label}: {value}', False, COLOR.black)
+                    data = self.font.render(f'{label}: {value:.1f}', False, COLOR.black)
                     self.screen.blit(data, (x_position, TEXT.stat_position[1] + (i + 1) * TEXT.stat_increment[1]))
         pygame.display.flip()
 
@@ -207,8 +207,8 @@ class Kernel(object):
 
         if pressed[pygame.K_w]: robot.commands[0] += 1
         if pressed[pygame.K_s]: robot.commands[0] -= 1
-        if pressed[pygame.K_q]: robot.commands[1] -= 1
-        if pressed[pygame.K_e]: robot.commands[1] += 1
+        if pressed[pygame.K_q]: robot.commands[1] += 1
+        if pressed[pygame.K_e]: robot.commands[1] -= 1
         if pressed[pygame.K_a]: robot.commands[2] += 1
         if pressed[pygame.K_d]: robot.commands[2] -= 1
         if pressed[pygame.K_b]: robot.commands[3] += 1
