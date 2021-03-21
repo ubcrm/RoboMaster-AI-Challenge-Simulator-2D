@@ -59,7 +59,7 @@ class Kernel(object):
         self.memory = []
         self.robots = [Robot() for _ in range(self.car_count)]
         self.zones.reset()
-        return State(self.time, self.robots)
+        return State(self.time, self.robots, self.zones)
 
     def play(self):
         assert self.render, 'play() requires render==True'
@@ -74,7 +74,7 @@ class Kernel(object):
             robot.commands = command
         for _ in range(10):
             self.one_epoch()
-        return State(self.time, self.robots)
+        return State(self.time, self.robots, self.zones)
 
     def one_epoch(self):
         pygame.time.wait(2)

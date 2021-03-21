@@ -23,6 +23,7 @@ class Actor:
         self.destination = None
         self.nav = Navigator(pathlib.Path('modules', 'waypoints', 'data.json'))
         self.robot = robot
+        self.zones = None
 
         # TODO replace dummy values with proper ones representing starting state
         self.next_state_commands = {}
@@ -99,16 +100,16 @@ class Actor:
         else:
             return np.sign(target[0] - pos_x), np.sign(target[1] - pos_y), np.sign(angle_diff)
 
-    def take_action(self):
+    def take_action(self, state):
         """
         Called on every frame by the Actor, it first updates the board state as stored in Actor memory
         Then it checks the current robot state to determine what the next line of action should be.
         It then accordingly modifies the next state command that is returned to kernel on every frame
         :return: The decisions to be made in the next time frame
         """
-        self.update_board_zones()
+        self.update_board_zones(state.zones)
         if self.has_ammo:
-            if self.is_buff_zone_active():
+            if self.is_hp_zone_active():
                 if self.has_buff:
                     if self.is_at_centre:
                         self.wait()
@@ -122,14 +123,14 @@ class Actor:
                 else:
                     self.move_to(self.centre_waypoint)
         else:
-            if self.is_supply_zone_active():
+            if self.is_ammo_zone_active():
                 self.rush_to(self.ammo_waypoint)
             else:
                 self.rush_to(self.spawn_waypoint)
 
         return self.next_state_commands
 
-    def update_board_zones(self):
+    def update_board_zones(self, zones):
         """
         Updates the Actor's brain with known values of the buff/debuff zones
         :return:
@@ -140,7 +141,7 @@ class Actor:
         to the robot, or manually checking if there is a mismatch between Actor brain and board zone's as passed in
         by outpost/competition info, and updating Actor brain accordingly
         """
-        pass
+        self.zones = zones
 
     def scan_for_enemies(self):
         """
@@ -193,18 +194,24 @@ class Actor:
         """
         pass
 
-    def is_supply_zone_active(self):
+    def is_ammo_zone_active(self):
         """
         TODO Checks if the supply zone is has not been activated yet from the current board zone info
         :return:
         """
-        pass
+        if self.is_blue:
+            return self.zones.is_zone_active('ammo_blue')
+        else:
+            return self.zones.is_zone_active('ammo_red')
 
-    def is_buff_zone_active(self):
+    def is_hp_zone_active(self):
         """
         TODO Checks if the ammo zone has not been activated yet from the current board zone info
         :return:
         """
-        pass
+        if self.is_blue:
+            return self.zones.is_zone_active('hp_blue')
+        else:
+            return self.zones.is_zone_active('hp_red')
 
 
