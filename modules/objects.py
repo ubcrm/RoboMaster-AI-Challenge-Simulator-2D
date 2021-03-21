@@ -3,7 +3,7 @@ class State(object):
     def __init__(self, time, zones, robots):
         self.time = time
         self.zone_types = zones.types
-        self.robots_status = [r.status_list() for r in robots]
+        self.robots_status = [r.status_dict() for r in robots]
 
 
 class Transition(object):

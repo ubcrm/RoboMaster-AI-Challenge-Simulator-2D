@@ -71,3 +71,13 @@ class Zones:
         elif type_ == ZONE.types['no_shoot']:
             activating_robot.can_shoot = False
             activating_robot.timeout = 10
+
+    def get_index_by_type(self, zone_type: str):
+        for index, type_ in enumerate(self.types):
+            if type_ == ZONE.types[zone_type]:
+                return index
+        return -1
+
+    def is_zone_active(self, zone_type: str):
+        index = self.get_index_by_type(zone_type)
+        return self.activation_status(index)
