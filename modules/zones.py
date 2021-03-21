@@ -1,7 +1,7 @@
 import random
 import pygame
 import time
-from modules.cache import Cache
+from types import SimpleNamespace
 from modules.constants import *
 from modules.geometry import Rectangle, mirror
 
@@ -26,7 +26,7 @@ class Zones:
 
     def draw(self, screen):
         if self.cache is None:
-            self.cache = Cache(
+            self.cache = SimpleNamespace(
                 inactive_image=pygame.image.load(IMAGE.inactive_zone).convert_alpha(),
                 activated_image=pygame.image.load(IMAGE.activated_zone).convert_alpha(),
                 icon_images=[pygame.image.load(IMAGE.zone_icon.format(k)).convert_alpha() for k in ZONE.types.keys()],
@@ -44,7 +44,8 @@ class Zones:
 
         for i in range(3):
             side = random.choice([0, 1])  # choose left/right side of field
-            self.types[2 * i: 2 * i + 1] = [indices[i] + side, indices[i] + 1 - side]
+            self.types[2 * i] = indices[i] + side
+            self.types[2 * i + 1] = indices[i] + 1 - side
 
     @staticmethod
     def _apply_buff_debuff(activating_robot, robots, type_):  # Buff/Debuff (Rules 2.3.1)
@@ -70,3 +71,13 @@ class Zones:
         elif type_ == ZONE.types['no_shoot']:
             activating_robot.can_shoot = False
             activating_robot.timeout = 10
+
+    def get_index_by_type(self, zone_type: str):
+        for index, type_ in enumerate(self.types):
+            if type_ == ZONE.types[zone_type]:
+                return index
+        return -1
+
+    def is_zone_active(self, zone_type: str):
+        index = self.get_index_by_type(zone_type)
+        return self.activation_status(index)

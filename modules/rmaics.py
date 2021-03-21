@@ -2,7 +2,7 @@ from modules.kernel import Kernel
 
 
 class Rmaics(object):
-    def __init__(self, agent_num, render=True):
+    def __init__(self, agent_num, render=False):
         self.game = Kernel(robot_count=agent_num, render=render)
         self.memory = []
 
@@ -11,19 +11,18 @@ class Rmaics(object):
         self.obs = self.get_observation(self.state)
         return self.obs
 
-    def step(self, actions):
-        state = self.game.step(actions)
+    def step(self, commands):
+        state = self.game.step(commands)
         obs = self.get_observation(state)
         rewards = self.get_reward(state)
 
-        self.memory.append([self.obs, actions, rewards])
+        self.memory.append([obs, actions, rewards])
         self.state = state
-        return obs, rewards, state.done, None
+        return obs, rewards, False, None
     
     def get_observation(self, state):
         # personalize your observation here
-        obs = state
-        return obs
+        return state
     
     def get_reward(self, state):
         # personalize your reward here
