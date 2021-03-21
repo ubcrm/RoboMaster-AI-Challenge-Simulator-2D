@@ -19,13 +19,11 @@ def transform(point, shift=(0, 0), angle=0):
 
 
 def mirror(point, flip_x=True, flip_y=True):
-    x_factor = -1 if flip_x else 1
-    y_factor = -1 if flip_y else 1
-    return x_factor * point[0], y_factor * point[1]
+    return (-1 if flip_x else 1) * point[0], (-1 if flip_y else 1) * point[1]
 
 
-def pygame_coords(p):
-    return round(p[0] + FIELD.half_dims[0] - 0.5), round(FIELD.half_dims[1] - p[1] - 0.5)
+def pygame_coords(p, offset=(0, 0)):
+    return round(p[0] + FIELD.half_dims[0] - 0.5 + offset[0]), round(FIELD.half_dims[1] - p[1] - 0.5 + offset[1])
 
 
 class Line:
@@ -47,9 +45,7 @@ class Line:
 
     def draw(self, screen):
         if self.cache is None:
-            self.cache = Cache(
-                start=(self.p1[0] + FIELD.half_dims[0], self.p1[1] + FIELD.half_dims[1]),
-                end=(self.p2[0] + FIELD.half_dims[0], self.p2[1] + FIELD.half_dims[1]))
+            self.cache = Cache(start=pygame_coords(self.p1), end=pygame_coords(self.p2))
         pygame.draw.line(screen, self.color, self.cache.start, self.cache.end)
 
     def intersects(self, line: 'Line'):

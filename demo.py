@@ -1,11 +1,10 @@
-# import os
-# os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+import time
+import numpy as np
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
 from modules.rmaics import Rmaics
 from modules.actor import Actor
-import numpy as np
-import time
-
 
 if __name__ == '__main__':
     start_time = time.time()

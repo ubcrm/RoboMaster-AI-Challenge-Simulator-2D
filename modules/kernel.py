@@ -1,16 +1,12 @@
-import os
 import numpy as np
-import time
 import json
+import pygame
 from modules.objects import *
 from modules.bullet import Bullet
 from modules.robot import Robot
 from modules.zones import Zones
 from modules.geometry import distance, mirror, Line, Rectangle
 from modules.constants import *
-
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
-import pygame  # comment when not rendering to improve performance
 
 C1 = Rectangle(100, 100, -354, -174, image='images/area/blue.png')
 C3 = Rectangle(100, 100, 354, 174, image='images/area/red.png')
@@ -27,19 +23,10 @@ low_barriers = [B2, B2.mirrored(), B5]  # areas B2, B5, B8
 high_barriers = [B1, B3, B4, B4.mirrored(), B3.mirrored(), B1.mirrored()]  # areas B1, B3, B4, B6, B7, B9
 
 
-# def normalize_angle(angle):
-#     if angle > 180:
-#         angle -= 360
-#     if angle <= -180:
-#         angle += 360
-#     return angle
-
-
 class Kernel(object):
-    def __init__(self, robot_count=4, render=False, record=True):
+    def __init__(self, robot_count=4, render=False):
         self.car_count = robot_count
         self.render = render
-        self.record = record
         self.time, self.bullets, self.epoch, self.n, self.stat, self.memory, self.transitions, self.robots = None, None, None, None, None, None, None, None
         self.zones = Zones()
         self.reset()
@@ -129,9 +116,6 @@ class Kernel(object):
                 i += 1
 
         self.epoch += 1
-        if self.record:
-            bullets = [Bullet(b.center, b.angle, b.owner_id) for b in self.bullets]
-            # self.memory.append(Record(self.time, self.robots.copy(), bullets))
         if self.render:
             self.draw()
 

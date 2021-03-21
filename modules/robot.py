@@ -3,7 +3,7 @@ import pygame
 from typing import Union
 from modules.cache import Cache
 from modules.constants import *
-from modules.geometry import mirror, distance, Line, Rectangle
+from modules.geometry import mirror, pygame_coords, Line, Rectangle
 
 chassis_outline = [Line(mirror(ROBOT.chassis_points[0], x, y), mirror(ROBOT.chassis_points[1], x, y), COLOR.green)
                    for x in [False, True] for y in [False, True]] + \
@@ -62,8 +62,7 @@ class Robot:
                 dead_chassis_image=pygame.image.load(IMAGE.dead_robot).convert_alpha(),
                 gimbal_image=pygame.image.load(IMAGE.gimbal).convert_alpha())
 
-        chassis_image = Robot.cache.blue_chassis_image if (
-                self.is_blue) else Robot.cache.red_chassis_image
+        chassis_image = Robot.cache.blue_chassis_image if self.is_blue else Robot.cache.red_chassis_image
         if self.hp <= 0:
             chassis_image = Robot.cache.dead_chassis_image
 
@@ -71,12 +70,11 @@ class Robot:
         gimbal_image = pygame.transform.rotate(Robot.cache.gimbal_image, -self.yaw - self.rotation)
         chassis_rect = chassis_image.get_rect()
         gimbal_rect = gimbal_image.get_rect()
-        chassis_rect.center = self.center + FIELD.half_dims
-        gimbal_rect.center = self.center + FIELD.half_dims
+        chassis_rect.center = gimbal_rect.center = pygame_coords(self.center)
         screen.blit(chassis_image, chassis_rect)
         screen.blit(gimbal_image, gimbal_rect)
         label = font.render(f'{self.id_} | {self.hp:.0f}', False, COLOR.blue if self.is_blue else COLOR.red)
-        screen.blit(label, self.center + TEXT.robot_label_offset + FIELD.half_dims)
+        screen.blit(label, pygame_coords(self.center, offset=TEXT.robot_label_offset))
 
         if stat:
             for line in [*chassis_outline, *shield_outline, *armor_panels]:
