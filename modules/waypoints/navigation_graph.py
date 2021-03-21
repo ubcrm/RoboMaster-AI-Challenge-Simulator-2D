@@ -4,12 +4,12 @@ import json
 from typing import Tuple, List
 import pathlib
 import copy
+from modules.geometry import to_draw_coords, to_center_coords, mirror
 
 WINDOW_NAME = 'Navigation Graph Generator'
 DATA_FILE_PATH = pathlib.Path('data.json')
 DELAY = 20
 
-FIELD_DIMS = (808 - 1, 448 - 1)
 NODE_WIDTH = 6
 INDICATOR_WIDTH = 2
 EDGE_THICKNESS = 2
@@ -40,7 +40,7 @@ class NavigationGraph:
             self._load(file_path)
 
     def add_node(self, center: Tuple[int, int]):
-        center = tuple(center)
+        center = to_center_coords(center)
         mirrored_center = mirror(center)
         swap = np.sum(mirrored_center) < np.sum(center)
         center1, center2 = (mirrored_center, center) if swap else (center, mirrored_center)
@@ -91,23 +91,24 @@ class NavigationGraph:
 
     def draw_nodes(self, image):
         for index in range(self.count_nodes):
-            text_position = (self.nodes[index][0] + NODE_LABEL_OFFSET[0], self.nodes[index][1] + NODE_LABEL_OFFSET[1])
+            text_position = to_draw_coords((self.nodes[index][0] + NODE_LABEL_OFFSET[0],
+                                            self.nodes[index][1] + NODE_LABEL_OFFSET[1]))
             cv2.fillPoly(image, np.array([self.corners[index]]), NODE_COLOR)
             cv2.putText(image, str(index), text_position, cv2.FONT_HERSHEY_SIMPLEX, LABEL_FONT_SIZE, LABEL_COLOR)
 
     def draw_edges(self, image):
         for index1, index2 in self.edges:
-            cv2.line(image, self.nodes[index1], self.nodes[index2], EDGE_COLOR, EDGE_THICKNESS)
+            cv2.line(image, to_draw_coords(self.nodes[index1]), to_draw_coords(self.nodes[index2]), EDGE_COLOR, EDGE_THICKNESS)
 
     def draw_selector(self, image, index: int, mode=0):  # mode = 0/1/2 for hover/select/delete
         color = [HOVER_INDICATOR_COLOR, SELECT_INDICATOR_COLOR, DELETE_INDICATOR_COLOR][mode]
         for index in (index, mirror_index(index)):
-            cv2.circle(image, self.nodes[index], NODE_WIDTH - INDICATOR_WIDTH + 1, color, INDICATOR_WIDTH)
+            cv2.circle(image, to_draw_coords(self.nodes[index]), NODE_WIDTH - INDICATOR_WIDTH + 1, color, INDICATOR_WIDTH)
 
     def draw_path(self, image, path: List[int], avoid_nodes: List[int] = None):
         avoid_nodes = [] if avoid_nodes is None else avoid_nodes
         for index in range(1, len(path)):
-            cv2.line(image, self.nodes[path[index - 1]], self.nodes[path[index]], EDGE_PATH_COLOR, EDGE_THICKNESS)
+            cv2.line(image, to_draw_coords(self.nodes[path[index - 1]]), to_draw_coords(self.nodes[path[index]]), EDGE_PATH_COLOR, EDGE_THICKNESS)
         for node in path:
             cv2.fillPoly(image, np.array([self.corners[node]]), NODE_PATH_COLOR)
         for node in avoid_nodes:
@@ -117,7 +118,7 @@ class NavigationGraph:
         min_distance = DIST_HOVER_THRESHOLD + 1
         min_index = None
         for index, center in enumerate(self.nodes):
-            distance = euclidean_distance(point, center)
+            distance = euclidean_distance(to_center_coords(point), center)
             if distance < min_distance:
                 min_distance = distance
                 min_index = index
@@ -150,10 +151,6 @@ class NavigationGraph:
             print(f'Loaded {self.count_nodes} nodes and {len(self.edges)} edges from "{file_path.name}".')
 
 
-def mirror(point):
-    return FIELD_DIMS[0] - point[0], FIELD_DIMS[1] - point[1]
-
-
 def mirror_index(index):
     return index - 2 * (index % 2) + 1
 
@@ -163,9 +160,9 @@ def euclidean_distance(p1, p2):
 
 
 def square_corners(center, width):
-    left, right = center[0] - width // 2, center[0] + width // 2
-    top, bottom = center[1] - width // 2, center[1] + width // 2
-    return [(left, top), (left, bottom), (right, bottom), (right, top)]
+    left, right = center[0] - width / 2, center[0] + width / 2
+    top, bottom = center[1] - width / 2, center[1] + width / 2
+    return [to_draw_coords(p) for p in [(left, top), (left, bottom), (right, bottom), (right, top)]]
 
 
 def equal(index1, index2):

@@ -22,8 +22,12 @@ def mirror(point, flip_x=True, flip_y=True):
     return (-1 if flip_x else 1) * point[0], (-1 if flip_y else 1) * point[1]
 
 
-def draw_coords(p, offset=(0, 0)):
+def to_draw_coords(p, offset=(0, 0)):
     return round(FIELD.half_dims[0] + p[0] - 0.5 + offset[0]), round(FIELD.half_dims[1] - p[1] - 0.5 + offset[1])
+
+
+def to_center_coords(p):
+    return p[0] - FIELD.half_dims[0] + 0.5, -p[1] + FIELD.half_dims[1] + 0.5
 
 
 class Line:
@@ -45,7 +49,7 @@ class Line:
 
     def draw(self, screen):
         if self.cache is None:
-            self.cache = Cache(start=draw_coords(self.p1), end=draw_coords(self.p2))
+            self.cache = Cache(start=to_draw_coords(self.p1), end=to_draw_coords(self.p2))
         pygame.draw.line(screen, self.color, self.cache.start, self.cache.end)
 
     def intersects(self, line: 'Line'):
@@ -80,7 +84,7 @@ class Rectangle:
                          *mirror(self.center, flip_x=flip_x, flip_y=flip_y), image=self.image, padding=self.padding)
 
     def pygame_rect(self):
-        return pygame.Rect(*draw_coords((self.left, self.top), offset=(self.padding, self.padding)),
+        return pygame.Rect(*to_draw_coords((self.left, self.top), offset=(self.padding, self.padding)),
                            self.dimensions[0] - 2 * self.padding, self.dimensions[1] - 2 * self.padding)
 
     def draw(self, screen: pygame.Surface):
