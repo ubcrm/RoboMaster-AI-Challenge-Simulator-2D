@@ -99,12 +99,6 @@ class Rectangle:
         return self.left < point[0] < self.right and self.top < point[1] < self.bottom
 
     def intersects(self, line: Line):
-        if any([line.p1[0] < self.left and line.p2[0] < self.left, line.p1[0] > self.right and line.p2[0] > self.right,
-                line.p1[1] < self.top and line.p2[1] < self.top, line.p1[1] > self.bottom and line.p2[1] > self.bottom]):
-            return False
-        if all([self.left < line.p1[0] < self.right, self.left < line.p2[0] < self.right,
-                self.top < line.p1[1] < self.bottom, self.top < line.p2[1] < self.bottom]):
-            return False
         sides = [line.get_side((x, y)) for x in (self.left, self.right) for y in (self.top, self.bottom)]
         if all(s < 0 for s in sides) or all(s > 0 for s in sides):
             return False
