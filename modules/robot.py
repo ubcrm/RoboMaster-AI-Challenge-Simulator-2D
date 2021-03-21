@@ -3,7 +3,7 @@ import pygame
 from typing import Union
 from modules.cache import Cache
 from modules.constants import *
-from modules.geometry import mirror, pygame_coords, Line, Rectangle
+from modules.geometry import mirror, draw_coords, Line, Rectangle
 
 chassis_outline = [Line(mirror(ROBOT.chassis_points[0], x, y), mirror(ROBOT.chassis_points[1], x, y), COLOR.green)
                    for x in [False, True] for y in [False, True]] + \
@@ -66,22 +66,22 @@ class Robot:
         if self.hp <= 0:
             chassis_image = Robot.cache.dead_chassis_image
 
-        chassis_image = pygame.transform.rotate(chassis_image, -self.rotation)
-        gimbal_image = pygame.transform.rotate(Robot.cache.gimbal_image, -self.yaw - self.rotation)
+        chassis_image = pygame.transform.rotate(chassis_image, self.rotation)
+        gimbal_image = pygame.transform.rotate(Robot.cache.gimbal_image, self.yaw + self.rotation)
         chassis_rect = chassis_image.get_rect()
         gimbal_rect = gimbal_image.get_rect()
-        chassis_rect.center = gimbal_rect.center = pygame_coords(self.center)
+        chassis_rect.center = gimbal_rect.center = draw_coords(self.center)
         screen.blit(chassis_image, chassis_rect)
         screen.blit(gimbal_image, gimbal_rect)
         label = font.render(f'{self.id_} | {self.hp:.0f}', False, COLOR.blue if self.is_blue else COLOR.red)
-        screen.blit(label, pygame_coords(self.center, offset=TEXT.robot_label_offset))
+        screen.blit(label, draw_coords(self.center, offset=TEXT.robot_label_offset))
 
         if stat:
             for line in [*chassis_outline, *shield_outline, *armor_panels]:
-                line.transformed(self.center, self.rotation).draw(screen)
+                line.transform(self.center, self.rotation).draw(screen)
 
     def collides_chassis(self, rect: Rectangle):
-        lines = [l.transformed(self.center, self.rotation) for l in chassis_outline]
+        lines = [l.transform(self.center, self.rotation) for l in chassis_outline]
         if any(rect.intersects(l) for l in lines):
             self.barrier_hits += 1
             return True
@@ -97,11 +97,11 @@ class Robot:
         if self._check_armor(line):
             self.bullet_hits += 1
             return True
-        lines = [l.transformed(self.center, self.rotation) for l in shield_outline]
+        lines = [l.transform(self.center, self.rotation) for l in shield_outline]
         return any(line.intersects(l) for l in lines)
 
     def _check_armor(self, geometry: Union[Line, Rectangle]):
-        lines = [l.transformed(self.center, self.rotation) for l in armor_panels]
+        lines = [l.transform(self.center, self.rotation) for l in armor_panels]
         if geometry.intersects(lines[0]):
             self.hp -= 20
         elif geometry.intersects(lines[1]) or geometry.intersects(lines[2]):

@@ -72,6 +72,7 @@ class IMAGE:
     dead_robot = 'images/robot/dead.png'
     gimbal = 'images/robot/gimbal.png'
     stats_panel = 'images/stats_panel.png'
+    coords = 'images/coords.png'
     logo = 'images/logo.png'
 
 

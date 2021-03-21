@@ -22,7 +22,7 @@ def mirror(point, flip_x=True, flip_y=True):
     return (-1 if flip_x else 1) * point[0], (-1 if flip_y else 1) * point[1]
 
 
-def pygame_coords(p, offset=(0, 0)):
+def draw_coords(p, offset=(0, 0)):
     return round(FIELD.half_dims[0] + p[0] - 0.5 + offset[0]), round(FIELD.half_dims[1] - p[1] - 0.5 + offset[1])
 
 
@@ -33,10 +33,10 @@ class Line:
         self.color = color
         self.cache = None
 
-    def mirrored(self, flip_x=True, flip_y=True):
+    def mirror(self, flip_x=True, flip_y=True):
         return Line(mirror(self.p1, flip_x=flip_x, flip_y=flip_y), mirror(self.p2, flip_x=flip_x, flip_y=flip_y), color=self.color)
 
-    def transformed(self, shift=(0, 0), angle=0):
+    def transform(self, shift=(0, 0), angle=0):
         angle = -np.deg2rad(angle)
         rotation_matrix = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
         p1 = np.matmul(self.p1, rotation_matrix) + shift
@@ -45,7 +45,7 @@ class Line:
 
     def draw(self, screen):
         if self.cache is None:
-            self.cache = Cache(start=pygame_coords(self.p1), end=pygame_coords(self.p2))
+            self.cache = Cache(start=draw_coords(self.p1), end=draw_coords(self.p2))
         pygame.draw.line(screen, self.color, self.cache.start, self.cache.end)
 
     def intersects(self, line: 'Line'):
@@ -63,26 +63,24 @@ class Line:
 
 
 class Rectangle:
-    def __init__(self, width, height, x_center=None, y_center=None, image=None, padding=0):
+    def __init__(self, width, height, x_center=0, y_center=0, image=None, padding=0):
         width, height = width + 2 * padding, height + 2 * padding
-        x_center = 0 if x_center is None else x_center
-        y_center = 0 if y_center is None else y_center
         self.padding = padding
         self.dimensions = (width, height)
         self.center = (x_center, y_center)
         self.left = x_center - width / 2
         self.right = x_center + width / 2
-        self.top = y_center - height / 2
-        self.bottom = y_center + height / 2
+        self.bottom = y_center - height / 2
+        self.top = y_center + height / 2
         self.image = image
         self.cache = None
 
-    def mirrored(self, flip_x=True, flip_y=True):
+    def mirror(self, flip_x=True, flip_y=True):
         return Rectangle(self.dimensions[0] - 2 * self.padding, self.dimensions[1] - 2 * self.padding,
                          *mirror(self.center, flip_x=flip_x, flip_y=flip_y), image=self.image, padding=self.padding)
 
     def pygame_rect(self):
-        return pygame.Rect(self.left + self.padding + FIELD.half_dims[0], self.top + self.padding + FIELD.half_dims[1],
+        return pygame.Rect(*draw_coords((self.left, self.top), offset=(self.padding, self.padding)),
                            self.dimensions[0] - 2 * self.padding, self.dimensions[1] - 2 * self.padding)
 
     def draw(self, screen: pygame.Surface):
@@ -93,17 +91,17 @@ class Rectangle:
 
     def contains(self, point, strict=False):
         if strict:
-            return self.left <= point[0] <= self.right and self.top <= point[1] <= self.bottom
-        return self.left < point[0] < self.right and self.top < point[1] < self.bottom
+            return self.left <= point[0] <= self.right and self.bottom <= point[1] <= self.top
+        return self.left < point[0] < self.right and self.bottom < point[1] < self.top
 
     def intersects(self, line: Line):
         if any([line.p1[0] < self.left and line.p2[0] < self.left, line.p1[0] > self.right and line.p2[0] > self.right,
-                line.p1[1] < self.top and line.p2[1] < self.top, line.p1[1] > self.bottom and line.p2[1] > self.bottom]):
+                line.p1[1] < self.bottom and line.p2[1] < self.bottom, line.p1[1] > self.top and line.p2[1] > self.top]):
             return False
         if all([self.left < line.p1[0] < self.right, self.left < line.p2[0] < self.right,
-                self.top < line.p1[1] < self.bottom, self.top < line.p2[1] < self.bottom]):
+                self.bottom < line.p1[1] < self.top, self.bottom < line.p2[1] < self.top]):
             return False
-        sides = [line.get_side((x, y)) for x in (self.left, self.right) for y in (self.top, self.bottom)]
+        sides = [line.get_side((x, y)) for x in (self.left, self.right) for y in (self.bottom, self.top)]
         if all(s < 0 for s in sides) or all(s > 0 for s in sides):
             return False
         return True

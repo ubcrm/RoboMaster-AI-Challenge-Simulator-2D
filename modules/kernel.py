@@ -12,15 +12,16 @@ C1 = Rectangle(100, 100, -354, -174, image='images/area/blue.png')
 C3 = Rectangle(100, 100, 354, 174, image='images/area/red.png')
 B5 = Rectangle(35.4, 35.4, 0, 0, image='images/area/lcm.png')
 B2 = Rectangle(80, 20, -214, 0, image='images/area/lhm.png')
-B1 = Rectangle(100, 20, -354, -114, image='images/area/hhu.png')
-B3 = Rectangle(20, 100, -244, 174, image='images/area/hvu.png')
-B4 = Rectangle(100, 20, 0, -120.5, image='images/area/hhm.png')
+B1 = Rectangle(100, 20, -354, 114, image='images/area/hhu.png')
+B3 = Rectangle(20, 100, -244, -174, image='images/area/hvu.png')
+B4 = Rectangle(100, 20, 0, 120.5, image='images/area/hhm.png')
 
 field = Rectangle(*FIELD.dims)
+coords = Rectangle(31, 31, image=IMAGE.coords)
 stats_panel = Rectangle(520, 340, image=IMAGE.stats_panel)
-spawn_rects = [C1, C1.mirrored(flip_x=False), C3, C3.mirrored(flip_x=False)]  # areas C1-4
-low_barriers = [B2, B2.mirrored(), B5]  # areas B2, B5, B8
-high_barriers = [B1, B3, B4, B4.mirrored(), B3.mirrored(), B1.mirrored()]  # areas B1, B3, B4, B6, B7, B9
+spawn_rects = [C1, C1.mirror(flip_x=False), C3, C3.mirror(flip_x=False)]  # areas C1-4
+low_barriers = [B2, B2.mirror(), B5]  # areas B2, B5, B8
+high_barriers = [B1, B3, B4, B4.mirror(), B3.mirror(), B1.mirror()]  # areas B1, B3, B4, B6, B7, B9
 
 
 class Kernel(object):
@@ -174,6 +175,7 @@ class Kernel(object):
             rect.draw(self.screen)
         for robot in self.robots:
             robot.draw(self.screen, self.font, stat=self.stat)
+        coords.draw(self.screen)
         for bullet in self.bullets:
             bullet.draw(self.screen)
         time_label = self.font.render(f'time: {self.time}', False, COLOR.black)
@@ -207,10 +209,10 @@ class Kernel(object):
         if pressed[pygame.K_s]: robot.commands[0] -= 1
         if pressed[pygame.K_q]: robot.commands[1] -= 1
         if pressed[pygame.K_e]: robot.commands[1] += 1
-        if pressed[pygame.K_a]: robot.commands[2] -= 1
-        if pressed[pygame.K_d]: robot.commands[2] += 1
-        if pressed[pygame.K_b]: robot.commands[3] -= 1
-        if pressed[pygame.K_m]: robot.commands[3] += 1
+        if pressed[pygame.K_a]: robot.commands[2] += 1
+        if pressed[pygame.K_d]: robot.commands[2] -= 1
+        if pressed[pygame.K_b]: robot.commands[3] += 1
+        if pressed[pygame.K_m]: robot.commands[3] -= 1
 
         robot.commands[4] = pressed[pygame.K_SPACE]
         self.stat = pressed[pygame.K_TAB]

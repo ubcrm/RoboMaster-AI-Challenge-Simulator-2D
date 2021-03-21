@@ -2,6 +2,7 @@ import pygame
 import numpy as np
 from modules.cache import Cache
 from modules.constants import FIELD, ROBOT, IMAGE
+from modules.geometry import draw_coords
 
 
 class Bullet(object):
@@ -20,5 +21,5 @@ class Bullet(object):
         if Bullet.cache is None:
             Bullet.cache = Cache(image=pygame.image.load(IMAGE.bullet))
         rect = Bullet.cache.image.get_rect()
-        rect.center = self.center + FIELD.half_dims
+        rect.center = draw_coords(self.center)
         screen.blit(Bullet.cache.image, rect)
