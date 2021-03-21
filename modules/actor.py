@@ -18,6 +18,7 @@ with open('waypoints.pk', 'rb') as f:
     waypoints = data[0]
     adjacency_matrix = data[1]
 
+
 class Actor:
     def __init__(self, car_num):
         self.car_num = car_num

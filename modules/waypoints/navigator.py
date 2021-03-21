@@ -5,6 +5,7 @@ import json
 import cv2
 from scipy import interpolate
 import numpy as np
+from modules.geometry import to_draw_coords
 
 WINDOW_NAME = 'Navigation Graph'
 DATA_FILE_PATH = pathlib.Path('data.json')
@@ -43,7 +44,7 @@ class Navigator:
     @staticmethod
     def draw_curve(image, x, y):
         for i in range(1, len(x)):
-            cv2.line(image, (x[i-1], y[i-1]), (x[i], y[i]), CURVE_COLOR, 2)
+            cv2.line(image, to_draw_coords((x[i-1], y[i-1])), to_draw_coords((x[i], y[i])), CURVE_COLOR, 2)
 
 
 if __name__ == "__main__":
@@ -55,10 +56,10 @@ if __name__ == "__main__":
     graph.draw_edges(image)
     graph.draw_nodes(image)
 
-    #avoid = [5, 32, 6]
+    avoid = [4, 17, 18, 19]
     #path = navigator.navigate(0, 31, avoid_nodes=avoid)
-    avoid = []
-    path = navigator.navigate(0, 9, avoid_nodes=avoid)
+    # avoid = []
+    path = navigator.navigate(6, 16, avoid_nodes=avoid)
 
     if path is not None:
         points = navigator.interpolate(path)

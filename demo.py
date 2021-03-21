@@ -4,7 +4,7 @@ import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
 from modules.rmaics import Rmaics
-from modules.actor import Actor
+# from modules.actor import Actor
 
 if __name__ == '__main__':
     start_time = time.time()
