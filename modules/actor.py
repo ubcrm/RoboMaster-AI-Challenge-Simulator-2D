@@ -2,10 +2,11 @@ import numpy as np
 import pathlib
 
 # Indices of important robot properties in state.agents[car_num]
-from modules.geometry import Rectangle
+from modules.geometry import Rectangle, Line
 from modules.robot import Robot
 from modules.waypoints.navigator import NavigationGraph
 from modules.waypoints.navigator import Navigator
+from modules.constants import FIELD
 
 OWNER = 0
 POS_X = 1
@@ -28,8 +29,6 @@ barrier_vertices = []
 '''
 Returns the determinant of the matrix made from two 2d column vectors, det((v0 v1))
 '''
-
-
 def det(v0, v1):
     return v0[0] * v1[1] - v1[0] * v0[1]
 
@@ -45,41 +44,40 @@ class Actor:
         self.robot = robot
         self.state = None
         self.barriers = low_barriers + high_barriers
-        self.next_state_commands = [0, 0, 0, 0, 0, 0, 0]
-
-        # TODO replace dummy values with proper ones representing starting state
+        self.next_state_commands = [0, 0, 0, 0, 0]
 
         self.has_ammo = False
         self.not_shooting = True
         self.has_buff = False
         self.is_at_centre = False
-        self.centre_waypoint = None
+        self.centre_waypoint = self.nearest_waypoint(np.array([0, 0]))
         self.is_at_spawn_zone = False
-        self.spawn_waypoint = None
+        # TODO: Check which team the robot is on to determine their proper spawn zones
+        self.spawn_waypoint = self.nearest_waypoint(np.array(FIELD.spawn_center))
         self.buff_waypoint = None
         self.ammo_waypoint = None
 
     def commands_from_state(self, state):
-        """Given the current state of the arena, determine what this robot should do next
-        using a simple rule-based algorithm. These commands are represented as an array of numbers,
-        which are interpreted by game.step()"""
+        """Testing method for movement and delivery of commands. To be replaced
+        by take_action()."""
         self.state = state
-        x = y = rotate = yaw = shoot = 1
-
-        destination = np.array([756, 217])
-        pos = self.nearest_waypoint(self.robot.center)
-        dest = self.nearest_waypoint(destination)
-        x, y, rotate = self.navigate(state, pos, dest, [17, 20])
-
-        commands = [x, y, rotate, yaw, shoot]
-
-        self.prev_commands = commands
-        return commands
+        self.destination = self.centre_waypoint
+        # x = y = rotate = yaw = shoot = 1
+        #
+        # destination = np.array([756, 217])
+        # pos = self.nearest_waypoint(self.robot.center)
+        # dest = self.nearest_waypoint(destination)
+        # x, y, rotate = self.navigate(state, pos, dest, [17, 20])
+        #
+        # commands = [x, y, rotate, yaw, shoot]
+        #
+        # self.prev_commands = commands
+        self.move_to(self.centre_waypoint)
+        return self.next_state_commands
 
     '''
        @arg pos should be np.array([x, y])
     '''
-
     def nearest_waypoint(self, pos):
         return np.argmin([np.linalg.norm(node - pos) for node in self.nav.nodes])
 
@@ -91,7 +89,6 @@ class Actor:
         Sets the destination to the nearest waypoint, stored as the waypoint number
         @arg dest should be np.array([x, y])
     '''
-
     def set_destination(self, dest):
         """
         Update the robots (x,y) destination co-ordinates
@@ -143,10 +140,6 @@ class Actor:
         print('-------')
         return forward, 0, np.sign(turn)
 
-    def get_property(self, state, prop):
-        # TODO: Update this method to use the new standard for accessing robot properties
-        return state.agents[self.car_num][prop]
-
     def take_action(self, state):
         """
         Called on every frame by the Actor, it first updates the board state as stored in Actor memory
@@ -154,30 +147,34 @@ class Actor:
         It then accordingly modifies the next state command that is returned to kernel on every frame
         :return: The decisions to be made in the next time frame
         """
-        self.update_board_zones(state.zones)
+        self.state = state
+        self.prev_commands = self.next_state_commands
+        self.update_board_zones()
         if self.has_ammo:
             if self.is_hp_zone_active():
                 if self.has_buff:
                     if self.is_at_centre:
                         self.wait()
                     else:
-                        self.move_to(self.centre_waypoint)
+                        self.destination = self.centre_waypoint
                 else:
-                    self.move_to(self.buff_waypoint)
+                    self.destination = self.buff_waypoint
             else:
                 if self.is_at_centre:
                     self.wait()
                 else:
-                    self.move_to(self.centre_waypoint)
+                    self.destination = self.centre_waypoint
+            self.move_to()
         else:
             if self.is_ammo_zone_active():
-                self.rush_to(self.ammo_waypoint)
+                self.destination = self.ammo_waypoint
             else:
-                self.rush_to(self.spawn_waypoint)
+                self.destination = self.spawn_waypoint
+            self.rush_to()
 
         return self.next_state_commands
 
-    def update_board_zones(self, zones):
+    def update_board_zones(self):
         """
         Updates the Actor's brain with known values of the buff/debuff zones
         :return:
@@ -262,22 +259,26 @@ class Actor:
             # Does not make changes to next_state_command
             pass
 
-    def move_to(self, waypoint):
+    def move_to(self, waypoint=10):
         """
         TODO Scans the robot's nearby environment for enemies to shoot and sets the robots next_state_commands
         such that it moves towards its set waypoint
         :param waypoint:
         :return:
         """
-        scanned_enemies = self.scan_for_enemies()
-        if scanned_enemies is not None:
-            self.aim_then_shoot(scanned_enemies)
-        else:
-            # TODO Insert navigation implementation
-            # self.navigate(state, self.current_waypoint, self.destination)
-            pass
+        # scanned_enemies = self.scan_for_enemies()
+        # if scanned_enemies is not None:
+        #     self.aim_then_shoot(scanned_enemies)
+        # else:
+        pos = self.nearest_waypoint(self.robot.center)
+        dest = self.destination if self.destination is not None else waypoint
+        # TODO: Update this function call when the new version of navigate is implemented
+        x, y, rotate = self.navigate(self.state, pos, dest, [3, 10])
 
-    def rush_to(self, waypoint):
+        yaw = shoot = 0
+        self.next_state_commands = [x, y, rotate, yaw, shoot]
+
+    def rush_to(self):
         """
         TODO Sets robot to navigate to the specified waypoint without checking for enemies
         :param waypoint:
