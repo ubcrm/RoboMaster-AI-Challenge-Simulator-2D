@@ -25,12 +25,13 @@ high_barriers = [B1, B3, B4, B4.mirror(), B3.mirror(), B1.mirror()]  # areas B1,
 
 barrier_vertices = []
 
-
 '''
 Returns the determinant of the matrix made from two 2d column vectors, det((v0 v1))
 '''
+
+
 def det(v0, v1):
-    return v0[0]*v1[1] - v1[0]*v0[1]
+    return v0[0] * v1[1] - v1[0] * v0[1]
 
 
 class Actor:
@@ -57,7 +58,6 @@ class Actor:
         self.spawn_waypoint = None
         self.buff_waypoint = None
         self.ammo_waypoint = None
-
 
     def commands_from_state(self, state):
         """Given the current state of the arena, determine what this robot should do next
@@ -236,8 +236,6 @@ class Actor:
         if adjustment_angle >= 180: adjustment_angle -= 360
         if adjustment_angle <= -180: adjustment_angle += 360
 
-
-
         pass
 
     def get_relative_robot_vertices(self, robot, direction):
@@ -306,3 +304,134 @@ class Actor:
             return self.zones.is_zone_active('hp_blue')
         else:
             return self.zones.is_zone_active('hp_red')
+
+    def get_lidar_vision(self):
+        """
+        Check's if the current acting robot can see other robots using camera vision, and returns id of the first
+        visible robot
+        Returns -1 if no robot can be seen
+        """
+        robot_id = self.robot.id_
+        robot_coordinates = self.robot.center
+        for offset_index in range(len(self.state.robots - 1)):
+            other_robot_coordinates = self.state.robots[robot_id - offset_index - 1].center
+            delta_x, delta_y = other_robot_coordinates - robot_coordinates
+            angle = np.angle(delta_x + delta_y * 1j, deg=True)
+            if angle >= 180: angle -= 360
+            if angle <= -180: angle += 360
+            angle = angle - self.robot.rotation
+            if angle >= 180: angle -= 360
+            if angle <= -180: angle += 360
+            if abs(angle) < 60:
+                if self.line_intersects_barriers(robot_coordinates, other_robot_coordinates) \
+                        or self.line_intersects_robots(robot_coordinates, other_robot_coordinates):
+                    pass
+                else:
+                    return self.state.robots[robot_id - offset_index - 1].id_
+            else:
+                pass
+
+        return -1
+
+    def get_camera_vision(self):
+        """
+        Check's if the current acting robot can see other robots using camera vision, and returns id of the first
+        visible robot
+        Returns -1 if no robot can be seen
+        """
+        robot_id = self.robot.id_
+        robot_coordinates = self.robot.center
+        for offset_index in range(len(self.state.robots - 1)):
+            other_robot_coordinates = self.state.robots[robot_id - offset_index - 1].center
+            delta_x, delta_y = other_robot_coordinates - robot_coordinates
+            angle = np.angle(delta_x + delta_y * 1j, deg=True)
+            if angle >= 180: angle -= 360
+            if angle <= -180: angle += 360
+            # Get relative angle
+            angle = angle - self.robot.yaw - self.robot.rotation
+            if angle >= 180: angle -= 360
+            if angle <= -180: angle += 360
+            if abs(angle) < 37.5:
+                if self.line_intersects_barriers(robot_coordinates, other_robot_coordinates) \
+                        or self.line_intersects_robots(robot_coordinates, other_robot_coordinates):
+                    pass
+                else:
+                    return self.state.robots[robot_id - offset_index - 1].id_
+            else:
+                pass
+
+        return -1
+
+    """Low-level enemy scanning functions below"""
+
+    def cross_product(self, p1, p2, p3):
+        """
+        Given 3 points p1, p2, p3, it calculates the cross product of p1->p2 and p1->p3 vectors.
+        Hence it returns 0 if all 3 line on the same line, a non-zero value otherwise
+        """
+        x1 = p2[0] - p1[0]
+        y1 = p2[1] - p1[1]
+        x2 = p3[0] - p1[0]
+        y2 = p3[1] - p1[1]
+        return x1 * y2 - x2 * y1
+
+    def get_robot_outline(self, robot):
+        """
+        Given a robot object, it returns the coordinates of its vertices based on the robot's rotation values
+        """
+        rotate_matrix = np.array([[np.cos(-np.deg2rad(robot.rotation + 90)),
+                                   -np.sin(-np.deg2rad(robot.rotation + 90))],
+                                  [np.sin(-np.deg2rad(robot.rotation + 90)),
+                                   np.cos(-np.deg2rad(robot.rotation + 90))]])
+        xs = np.array([[-22.5, -30], [22.5, 30], [-22.5, 30], [22.5, -30]])
+        return [np.matmul(xs[i], rotate_matrix) + robot.center for i in range(xs.shape[0])]
+
+    def segment(self, p1, p2, p3, p4):
+        if (max(p1[0], p2[0]) >= min(p3[0], p4[0])
+                and max(p3[0], p4[0]) >= min(p1[0], p2[0])
+                and max(p1[1], p2[1]) >= min(p3[1], p4[1])
+                and max(p3[1], p4[1]) >= min(p1[1], p2[1])):
+            if (self.cross_product(p1, p2, p3) * self.cross_product(p1, p2, p4) <= 0
+                    and self.cross_product(p3, p4, p1) * self.cross_product(p3, p4, p2) <= 0):
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    def line_rect_check(self, l1, l2, sq):
+        # this part code came from: https://www.jianshu.com/p/a5e73dbc742a
+        # check if line cross rect, sq = [x_leftdown, y_leftdown, x_rightup, y_rightup]
+        p1 = [sq[0], sq[1]]
+        p2 = [sq[2], sq[3]]
+        p3 = [sq[2], sq[1]]
+        p4 = [sq[0], sq[3]]
+        if self.segment(l1, l2, p1, p2) or self.segment(l1, l2, p3, p4):
+            return True
+        else:
+            return False
+
+    def line_intersects_barriers(self, point1, point2):
+        """
+        Given two points, it checks if the line created by those points intersect any map barrier
+        """
+        line = Line(point1, point2)
+        for barrier in self.barriers:
+            if barrier.intersects(line):
+                return True
+        return False
+
+    def line_intersects_robots(self, robot_center1, robot_center2):
+        """
+        Given the center coordinates of two robots, it checks if any other robots are between the straight line
+        connecting them
+        """
+        for robot in self.state.robots:
+            if (robot.center == robot_center1).all() or (robot.center == robot_center2).all():
+                # Performing comparison with the current robots, so pass onto next loop
+                continue
+            vertex1, vertex2, vertex3, vertex4 = self.get_robot_outline(robot)
+            if self.segment(robot_center1, robot_center2, vertex1, vertex2) \
+                    or self.segment(robot_center1, robot_center2, vertex3, vertex4):
+                return True
+        return False
