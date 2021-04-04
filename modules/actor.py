@@ -2,6 +2,7 @@ import numpy as np
 import pathlib
 
 # Indices of important robot properties in state.agents[car_num]
+from modules.constants import TIME
 from modules.geometry import Rectangle, Line
 from modules.robot import Robot
 from modules.waypoints.navigator import NavigationGraph
@@ -45,6 +46,13 @@ class Actor:
         self.state = None
         self.barriers = low_barriers + high_barriers
         self.next_state_commands = [0, 0, 0, 0, 0]
+        self.next_state_commands = [0, 0, 0, 0, 0]
+        self.buff_waypoint = [0, 0]
+        self.no_shoot_waypoint = [0, 0]
+        self.no_move_waypoint = [0, 0]
+        self.ammo_waypoint = [0, 0]
+
+        # TODO replace dummy values with proper ones representing starting state
 
         self.has_ammo = False
         self.not_shooting = True
@@ -177,19 +185,18 @@ class Actor:
     def update_board_zones(self):
         """
         Updates the Actor's brain with known values of the buff/debuff zones
-        :return:
         """
-        """
-        TODO Dummy function
-        Can either be called on every 60, 120 and 180 second time mark if competition time info is passed
-        to the robot, or manually checking if there is a mismatch between Actor brain and board zone's as passed in
-        by outpost/competition info, and updating Actor brain accordingly
-        """
-        if self.state.time == 0 or self.state.time == 60 or self.state.time == 120:
-            self.ammo_waypoint = self.state.zones.get_index_by_type()
-            self.buff_waypoint = 0
-            # self.
-        pass
+        if self.state.time % TIME.zone_reset == 0:
+            if self.is_blue:
+                # Team blue waypoints
+                self.ammo_waypoint = self.state.zones.get_center_by_type('ammo_blue')
+                self.buff_waypoint = self.state.zones.get_center_by_type('hp_blue')
+            else:
+                # Team red waypoints
+                self.ammo_waypoint = self.state.zones.get_center_by_type('ammo_red')
+                self.buff_waypoint = self.state.zones.get_center_by_type('hp_red')
+        self.no_shoot_waypoint = self.state.zones.get_center_by_type('no_shoot')
+        self.no_move_waypoint = self.state.zones.get_center_by_type('no_move')
 
     def scan_for_enemies(self):
         """
@@ -232,7 +239,7 @@ class Actor:
         adjustment_angle = np.angle(delta_x + delta_y * 1j, deg=True) - self.robot.yaw - self.robot.rotation
         if adjustment_angle >= 180: adjustment_angle -= 360
         if adjustment_angle <= -180: adjustment_angle += 360
-
+        # TODO Debug the adjustment angle to see how it is used to aim
         pass
 
     def get_relative_robot_vertices(self, robot, direction):
@@ -249,7 +256,7 @@ class Actor:
 
     def wait(self):
         """
-        TODO Scan's the robot's nearby environment for enemies to shoot, does not move
+        Scans the robot's nearby environment for enemies to shoot, does not move
         :return:
         """
         scanned_enemies = self.scan_for_enemies()
@@ -288,23 +295,21 @@ class Actor:
 
     def is_ammo_zone_active(self):
         """
-        TODO Checks if the supply zone is has not been activated yet from the current board zone info
-        :return:
+        Checks if the supply zone is has not been activated yet from the current board zone info
         """
         if self.is_blue:
-            return self.zones.is_zone_active('ammo_blue')
+            return self.state.zones.is_zone_active('ammo_blue')
         else:
-            return self.zones.is_zone_active('ammo_red')
+            return self.state.zones.is_zone_active('ammo_red')
 
     def is_hp_zone_active(self):
         """
-        TODO Checks if the ammo zone has not been activated yet from the current board zone info
-        :return:
+        Checks if the ammo zone has not been activated yet from the current board zone info
         """
         if self.is_blue:
-            return self.zones.is_zone_active('hp_blue')
+            return self.state.zones.is_zone_active('hp_blue')
         else:
-            return self.zones.is_zone_active('hp_red')
+            return self.state.zones.is_zone_active('hp_red')
 
     def get_lidar_vision(self):
         """
