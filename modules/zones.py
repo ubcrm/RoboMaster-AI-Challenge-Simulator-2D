@@ -78,6 +78,10 @@ class Zones:
                 return index
         return -1
 
+    def get_center_by_type(self, zone_type: str):
+        index = self.get_index_by_type(zone_type)
+        return activation_rects[index].center
+
     def is_zone_active(self, zone_type: str):
         index = self.get_index_by_type(zone_type)
-        return self.activation_status(index)
+        return self.activation_status[index]
