@@ -5,6 +5,7 @@ class Rmaics(object):
     def __init__(self, agent_num, render=False):
         self.game = Kernel(robot_count=agent_num, render=render)
         self.memory = []
+        self.state = None
 
     def reset(self):
         self.state = self.game.reset()
