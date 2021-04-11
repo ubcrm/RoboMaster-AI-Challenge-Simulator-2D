@@ -1,3 +1,4 @@
 pygame==2.0.1
 numpy~=1.19.2
 networkx~=2.5
+geometer~=0.2.3
