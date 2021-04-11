@@ -36,8 +36,6 @@ def det(v0, v1):
 
 class Actor:
     def __init__(self, car_num, robot):
-        self.car_num = car_num
-        self.is_blue = robot.is_blue
         self.prev_commands = None
         self.next_waypoint = None
         self.destination = None
@@ -45,7 +43,6 @@ class Actor:
         self.robot = robot
         self.state = None
         self.barriers = low_barriers + high_barriers
-        self.next_state_commands = [0, 0, 0, 0, 0]
         self.next_state_commands = [0, 0, 0, 0, 0]
         self.buff_waypoint = [0, 0]
         self.no_shoot_waypoint = [0, 0]
@@ -187,7 +184,7 @@ class Actor:
         Updates the Actor's brain with known values of the buff/debuff zones
         """
         if self.state.time % TIME.zone_reset == 0:
-            if self.is_blue:
+            if self.robot.is_blue:
                 # Team blue waypoints
                 self.ammo_waypoint = self.state.zones.get_center_by_type('ammo_blue')
                 self.buff_waypoint = self.state.zones.get_center_by_type('hp_blue')
@@ -242,18 +239,6 @@ class Actor:
         # TODO Debug the adjustment angle to see how it is used to aim
         pass
 
-    def get_relative_robot_vertices(self, robot, direction):
-        """
-        Helper function for aiming at another robot
-        Returns transformed vertices of the other robot
-        """
-        rotate_matrix = np.array([[np.cos(-np.deg2rad(robot.rotation + 90)),
-                                   -np.sin(-np.deg2rad(robot.rotation + 90))],
-                                  [np.sin(-np.deg2rad(robot.rotation + 90)),
-                                   np.cos(-np.deg2rad(robot.rotation + 90))]])
-        xs = np.array([[0, -30], [18.5, 0], [0, 30], [-18.5, 0]])
-        return np.matmul(xs[direction], rotate_matrix) + robot.center
-
     def wait(self):
         """
         Scans the robot's nearby environment for enemies to shoot, does not move
@@ -297,7 +282,7 @@ class Actor:
         """
         Checks if the supply zone is has not been activated yet from the current board zone info
         """
-        if self.is_blue:
+        if self.robot.is_blue:
             return self.state.zones.is_zone_active('ammo_blue')
         else:
             return self.state.zones.is_zone_active('ammo_red')
@@ -306,7 +291,7 @@ class Actor:
         """
         Checks if the ammo zone has not been activated yet from the current board zone info
         """
-        if self.is_blue:
+        if self.robot.is_blue:
             return self.state.zones.is_zone_active('hp_blue')
         else:
             return self.state.zones.is_zone_active('hp_red')
@@ -391,6 +376,18 @@ class Actor:
                                    np.cos(-np.deg2rad(robot.rotation + 90))]])
         xs = np.array([[-22.5, -30], [22.5, 30], [-22.5, 30], [22.5, -30]])
         return [np.matmul(xs[i], rotate_matrix) + robot.center for i in range(xs.shape[0])]
+
+    def get_relative_robot_vertices(self, robot, direction):
+        """
+        Helper function for aiming at another robot
+        Returns transformed vertices of the other robot
+        """
+        rotate_matrix = np.array([[np.cos(-np.deg2rad(robot.rotation + 90)),
+                                   -np.sin(-np.deg2rad(robot.rotation + 90))],
+                                  [np.sin(-np.deg2rad(robot.rotation + 90)),
+                                   np.cos(-np.deg2rad(robot.rotation + 90))]])
+        xs = np.array([[0, -30], [18.5, 0], [0, 30], [-18.5, 0]])
+        return np.matmul(xs[direction], rotate_matrix) + robot.center
 
     def segment(self, p1, p2, p3, p4):
         if (max(p1[0], p2[0]) >= min(p3[0], p4[0])
