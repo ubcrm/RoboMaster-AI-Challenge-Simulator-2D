@@ -305,6 +305,16 @@ class Actor:
         robot_id = self.robot.id_
         robot_coordinates = self.robot.center
         for offset_index in range(len(self.state.robots - 1)):
+            if robot_id % 2 == 0:
+                # If the robot is in the blue team
+                if self.state.robots[robot_id - offset_index - 1].id_ % 2 == 0:
+                    # Only scan for red team robots and not blue team
+                    continue
+            else:
+                # If the robot is in the red team
+                if self.state.robots[robot_id - offset_index - 1].id_ % 2 == 1:
+                    # Only scan for blue team robots and not red team
+                    continue
             other_robot_coordinates = self.state.robots[robot_id - offset_index - 1].center
             delta_x, delta_y = other_robot_coordinates - robot_coordinates
             angle = np.angle(delta_x + delta_y * 1j, deg=True)
@@ -333,6 +343,16 @@ class Actor:
         robot_id = self.robot.id_
         robot_coordinates = self.robot.center
         for offset_index in range(len(self.state.robots - 1)):
+            if robot_id % 2 == 0:
+                # If the robot is in the blue team
+                if self.state.robots[robot_id - offset_index - 1].id_ % 2 == 0:
+                    # Only scan for red team robots and not blue team
+                    continue
+            else:
+                # If the robot is in the red team
+                if self.state.robots[robot_id - offset_index - 1].id_ % 2 == 1:
+                    # Only scan for blue team robots and not red team
+                    continue
             other_robot_coordinates = self.state.robots[robot_id - offset_index - 1].center
             delta_x, delta_y = other_robot_coordinates - robot_coordinates
             angle = np.angle(delta_x + delta_y * 1j, deg=True)
