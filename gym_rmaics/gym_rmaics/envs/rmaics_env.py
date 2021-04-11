@@ -8,7 +8,7 @@ from modules.rmaics import Rmaics
 logger = logging.getLogger(__name__)
 
 
-class RMAICSEnv(gym.Env, utils.ezpickle):
+class RMAICSEnv(gym.Env):
 
     def __init__(self, num_agents=1, num_steps=400):
         self.rmaics = Rmaics(agent_num=num_agents, render=False)
