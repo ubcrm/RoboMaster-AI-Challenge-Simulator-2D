@@ -1,2 +1,3 @@
 *.npy
 .idea
+gym_rmaics/gym_rmaics.egg-info
