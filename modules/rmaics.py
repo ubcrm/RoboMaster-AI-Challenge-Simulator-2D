@@ -6,29 +6,30 @@ class Rmaics(object):
         self.game = Kernel(robot_count=agent_num, render=render)
         self.memory = []
 
+    @property
+    def state(self):
+        return self.game.state
+
     def reset(self):
-        self.state = self.game.reset()
-        self.obs = self.get_observation(self.state)
-        return self.obs
+        self.game.reset()
+        self.memory = []
+        return self.get_observation()
 
     def step(self, actions):
         state = self.game.step(actions)
-        obs = self.get_observation(state)
-        rewards = self.get_reward(state)
+        obs = self.get_observation()
+        reward = self.get_reward()
 
-        self.memory.append([self.obs, actions, rewards])
-        self.state = state
-        return obs, rewards, state.done, None
+        self.memory.append([obs, actions, reward])
+        return obs, reward, state.done, None
     
-    def get_observation(self, state):
+    def get_observation(self):
         # personalize your observation here
-        obs = state
-        return obs
+        return self.state
     
-    def get_reward(self, state):
+    def get_reward(self):
         # personalize your reward here
-        rewards = None
-        return rewards
+        return 0
 
     def play(self):
         self.game.play()

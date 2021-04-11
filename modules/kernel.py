@@ -1,3 +1,5 @@
+from typing import List
+
 import pygame
 import numpy as np
 import time
@@ -36,7 +38,7 @@ class Kernel(object):
         self.car_count = robot_count
         self.render = render
         self.record = record
-        self.time, self.obs, self.compet_info, self.bullets, self.epoch, self.n, self.stat, self.memory, self.robots = None, None, None, None, None, None, None, None, None
+        self.time, self.obs, self.compet_info, self.bullets, self.epoch, self._selected_robot_idx, self.stat, self.memory, self.robots = None, None, None, None, None, None, None, None, None
         self.zones = Zones()
         self.reset()
 
@@ -45,6 +47,7 @@ class Kernel(object):
             self.screen = pygame.display.set_mode(FIELD.dims)
             pygame.display.set_caption('UBC RoboMaster AI Challenge Simulator')
             pygame.display.set_icon(pygame.image.load(IMAGE.logo))
+
             pygame.font.init()
             self.font = pygame.font.SysFont('mono', 12)
             self.clock = pygame.time.Clock()
@@ -54,12 +57,20 @@ class Kernel(object):
         self.obs = np.zeros((self.car_count, 17), dtype=np.float32)
         self.bullets = []
         self.epoch = 0
-        self.n = 0
+        self._selected_robot_idx = 0
         self.stat = False
         self.memory = []
         self.robots = [Robot() for _ in range(self.car_count)]
         self.zones.reset()
+        return self.state
+
+    @property
+    def state(self):
         return State(self.time, self.robots)
+
+    @property
+    def robot(self):
+        return self.robots[self._selected_robot_idx]
 
     def play(self):
         assert self.render, 'play() requires render==True'
@@ -74,7 +85,7 @@ class Kernel(object):
             robot.commands = command
         for _ in range(10):
             self.one_epoch()
-        return State(self.time, self.robots)
+        return self.state
 
     def one_epoch(self):
         pygame.time.wait(2)
@@ -103,7 +114,7 @@ class Kernel(object):
             self.time -= 1
         if not self.epoch % 12000:
             self.zones.reset()
-        
+
         i = 0
         while i < len(self.bullets):  # update bullets
             if self.move_bullet(self.bullets[i]):
@@ -158,12 +169,12 @@ class Kernel(object):
         old_center = bullet.center.copy()
         bullet.step()
         trajectory = Line(old_center, bullet.center)
-        
+
         if not field.contains(bullet.center, strict=True):
             return True
         if any(b.intersects(trajectory) for b in high_barriers):
             return True
-        
+
         for robot in self.robots:
             if robot.id_ == bullet.owner_id:
                 continue
@@ -172,7 +183,6 @@ class Kernel(object):
         return False
 
     def draw(self):
-        assert self.render, 'draw() requires render==True'
         self.screen.fill(COLOR.gray)
         self.zones.draw(self.screen)
         for rect in [*spawn_rects, *low_barriers, *high_barriers]:
@@ -201,25 +211,33 @@ class Kernel(object):
                 return True
 
         pressed = pygame.key.get_pressed()
-        if pressed[pygame.K_1]: self.n = 0
-        if pressed[pygame.K_2]: self.n = 1
-        if pressed[pygame.K_3]: self.n = 2
-        if pressed[pygame.K_4]: self.n = 3
-        robot = self.robots[self.n]
-        robot.commands[:] = 0
 
-        if pressed[pygame.K_w]: robot.commands[0] += 1
-        if pressed[pygame.K_s]: robot.commands[0] -= 1
-        if pressed[pygame.K_q]: robot.commands[1] -= 1
-        if pressed[pygame.K_e]: robot.commands[1] += 1
-        if pressed[pygame.K_a]: robot.commands[2] -= 1
-        if pressed[pygame.K_d]: robot.commands[2] += 1
-        if pressed[pygame.K_b]: robot.commands[3] -= 1
-        if pressed[pygame.K_m]: robot.commands[3] += 1
+        robot_select_map = {
+            pygame.K_1: 0,
+            pygame.K_2: 1,
+            pygame.K_3: 2,
+            pygame.K_4: 3
+        }
+        for keycode, idx in robot_select_map.items():
+            if pressed[keycode]:
+                self._selected_robot_idx = idx
+        self.robot.commands[:] = 0
 
-        robot.commands[4] = int(pressed[pygame.K_SPACE])
+        if pressed[pygame.K_w]: self.robot.commands[0] += 1
+        if pressed[pygame.K_s]: self.robot.commands[0] -= 1
+        if pressed[pygame.K_q]: self.robot.commands[1] -= 1
+        if pressed[pygame.K_e]: self.robot.commands[1] += 1
+        if pressed[pygame.K_a]: self.robot.commands[2] -= 1
+        if pressed[pygame.K_d]: self.robot.commands[2] += 1
+        if pressed[pygame.K_b]: self.robot.commands[3] -= 1
+        if pressed[pygame.K_m]: self.robot.commands[3] += 1
+
+        self.robot.commands[4] = int(pressed[pygame.K_SPACE])
         self.stat = pressed[pygame.K_TAB]
         return False
+
+    def set_actions(self, actions: List[int]):
+        self.robot.commands = np.array(actions)
 
     def check_interference(self, robot: Robot):
         if robot.collides_chassis(field):
