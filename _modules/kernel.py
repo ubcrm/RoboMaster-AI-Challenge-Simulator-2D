@@ -94,10 +94,10 @@ class Kernel(object):
             self.zones.apply(self.robots)
             self.move_robot(robot)
 
-            if not self.epoch % TIME.unit and robot.debuffTimeoutSteps > 0:
-                robot.debuffTimeoutSteps -= 1
+            if not self.epoch % TIME.unit and robot.debuffTimeoutCycles > 0:
+                robot.debuffTimeoutCycles -= 1
 
-            robot.shotCooldownSteps = max(0, robot.shotCooldownSteps - 1)
+            robot.shotCooldownCycles = max(0, robot.shotCooldownCycles - 1)
 
             if not self.epoch % TIME.heat:  # Barrel Heat (Rules 4.1.2)
                 if robot.heat_settle >= 360:
@@ -185,7 +185,7 @@ class Kernel(object):
             return True
         
         for robot in self.robots:
-            if robot.id_ == bullet.owner_id:
+            if robot.index == bullet.owner_id:
                 continue
             if robot.absorbsBullet(trajectory):
                 return True
@@ -196,12 +196,12 @@ class Kernel(object):
         self.screen.fill(COLOR.gray)
         self.zones.draw(self.screen)
         for rect in [*spawn_rects, *low_barriers, *high_barriers]:
-            rect._display(self.screen)
+            rect.render(self.screen)
         for robot in self.robots:
-            robot._display(self.screen, self.font, stat=self.stat)
+            robot.render(self.screen, self.font, stat=self.stat)
         coords.draw(self.screen)
         for bullet in self.bullets:
-            bullet._display(self.screen)
+            bullet.render(self.screen)
         time_label = self.font.render(f'time: {self.time}', False, COLOR.black)
         self.screen.blit(time_label, TEXT.time_position)
 
@@ -209,7 +209,7 @@ class Kernel(object):
             stats_panel.draw(self.screen)
             for n, robot in enumerate(self.robots):
                 x_position = TEXT.stat_position[0] + n * TEXT.stat_increment[0]
-                header = self.font.render(f'robot {robot.id_}', False, COLOR.blue if robot.team else COLOR.red)
+                header = self.font.render(f'robot {robot.index}', False, COLOR.blue if robot.team else COLOR.red)
                 self.screen.blit(header, (x_position, TEXT.stat_position[1]))
                 for i, (label, value) in enumerate(robot.status_dict().items()):
                     data = self.font.render(f'{label}: {value:.1f}', False, COLOR.black)
@@ -250,7 +250,7 @@ class Kernel(object):
                     (robot.collides_chassis(barrier) or robot.collides_armor(barrier)):
                 return True
         for other_robot in self.robots:
-            if other_robot.id_ == robot.id_:
+            if other_robot.index == robot.id_:
                 continue
             if distance(robot.center, other_robot.centers) < 2 * ROBOT.size:
                 robot.robot_hits += 1

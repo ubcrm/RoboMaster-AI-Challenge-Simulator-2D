@@ -1,5 +1,5 @@
+import math
 from game.geometry import Point, Line, Rectangle, xMirrors, yMirrors, xyMirrors
-from shared import PI
 
 
 class FIELD:
@@ -51,10 +51,10 @@ class ROBOT:
 class MOTION:
     xAccel, xSpeed = 0.25, 1.5
     yAccel, ySpeed = 0.2, 1.2
-    rotationAccel, rotationSpeed = 0.008, 0.03
-    gimbalYawAccel, gimbalYawSpeed = 0.02, 0.06
+    rotationAccel, rotationSpeed = 0.005, 0.02
+    gimbalYawAccel, gimbalYawSpeed = 0.02, 0.05
     reboundCoefficient = 0.3
-    gimbalYawRange = 4 / 3 * PI
+    gimbalYawRange = 4 / 3 * math.pi
 
 
 class BULLET:
@@ -63,7 +63,7 @@ class BULLET:
 
 
 class TIME:
-    cycle = 10
+    step = 10
     second = 100  # changing this will have indirect consequences
     shotCooldown = 8
     heatSettlement = 10

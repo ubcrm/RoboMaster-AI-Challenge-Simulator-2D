@@ -67,7 +67,7 @@ class Zones:
                     robot.ammoBuff += 100
         elif type_ == ZONE.types['no_move']:
             activating_robot.canMove = False
-            activating_robot.debuffTimeoutSteps = 10
+            activating_robot.debuffTimeoutCycles = 10
         elif type_ == ZONE.types['no_shoot']:
             activating_robot.canShoot = False
-            activating_robot.debuffTimeoutSteps = 10
+            activating_robot.debuffTimeoutCycles = 10

@@ -1,32 +1,31 @@
 import math
 from game.geometry import Point, Line, Rectangle
 from game.config import ROBOT, MOTION, TIME
-from shared import Team, RobotState, RobotCommand, PI
+from shared import Team, RobotState, RobotCommand
 
 
 class Robot:
-    def __init__(self, number: int, team: Team):
-        self.number = number
+    def __init__(self, team: Team, index: int):
         self.team = team
-        self.id_ = 2 * number + team.value
+        self.id_ = 2 * team.value + index
 
-        self.center = ROBOT.center.mirror(team is Team.blue, number == team.value)
-        self.rotation = 0. if (team is Team.blue) else PI
+        self.center = ROBOT.center.mirror(team is Team.blue, index == team.value)
+        self.rotation = 0. if (team is Team.blue) else math.pi
         self.gimbalYaw = 0.
         self.speed = Point(0., 0.)
         self.rotationSpeed = 0.
         self.gimbalYawSpeed = 0.
 
-        self.ammo = ROBOT.ammo if (number == 0) else 0
+        self.ammo = ROBOT.ammo if (index == 0) else 0
         self.isShooting = False
-        self.shotCooldownSteps = 0
+        self.shotCooldownCycles = 0
         self.heat = 0
         self.hp = ROBOT.hp
         self.barrierHits = 0
         self.robotHits = 0
         self.canMove = True
         self.canShoot = True
-        self.debuffTimeoutSteps = 0
+        self.debuffTimeoutCycles = 0
 
         self.damage = 0
         self.corners = [p.transform(self.center, self.rotation) for p in ROBOT.rect.corners]
@@ -85,10 +84,10 @@ class Robot:
             heat=self.heat,
             hp=self.hp,
             isShooting=self.isShooting,
-            shotCooldown=self.shotCooldownSteps / TIME.second,
+            shotCooldown=self.shotCooldownCycles / TIME.second,
             barrierHits=self.barrierHits,
             robotHits=self.robotHits,
             canMove=self.canMove,
             canShoot=self.canShoot,
-            debuffTimeout=self.debuffTimeoutSteps / TIME.second
+            debuffTimeout=self.debuffTimeoutCycles / TIME.second
         )

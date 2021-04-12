@@ -1,76 +1,80 @@
+import math
 from game.geometry import Line
 from game.robot import Robot
 from game.bullet import Bullet
 from game.config import TIME, ROBOT, FIELD, BULLET, MOTION
-from shared import GameMode, Team, Winner, RobotCommand, GameState, PI
+from shared import Team, Winner, RobotCommand, GameState, TeamState
 
 
 class Game:
-    def __init__(self, mode=GameMode.twoVsTwo):
-        self.stepsRemaining = TIME.gameDuration
-        self.blueRobots = [Robot(n, Team.blue) for n in range(mode.value)]
-        self.redRobots = [Robot(n, Team.red) for n in range(mode.value)]
-        self.bullets = []
+    def __init__(self):
+        self._state: GameState = None
+        self._cyclesRemaining = self._blueRobots = self._redRobots = self._bullets = None
 
-    def advance(self, blueCommands: tuple[RobotCommand], redCommands: tuple[RobotCommand]):
-        for robot, command in zip(self.blueRobots, blueCommands):
-            robot.control(command)
-        for robot, command in zip(self.redRobots, redCommands):
-            robot.control(command)
-        for _ in range(TIME.cycle):
-            self._step()
+    def reset(self):
+        self._cyclesRemaining = TIME.gameDuration
+        self._blueRobots = [Robot(Team.blue, i) for i in range(2)]
+        self._redRobots = [Robot(Team.red, i) for i in range(2)]
+        self._bullets = []
+        self._state = self._getState()
+        return self._state
 
-        blueDamageOutput = sum(r.damage for r in self.redRobots)
-        redDamageOutput = sum(r.damage for r in self.blueRobots)
-        bluesDead = all(r.hp == 0 for r in self.blueRobots)
-        redsDead = all(r.hp == 0 for r in self.redRobots)
+    def step(self, blueCommands: tuple[RobotCommand], redCommands: tuple[RobotCommand]):
+        for robot, command in zip([*self._blueRobots, *self._redRobots], [*blueCommands, *redCommands]):
+            robot.control(command)
+        for _ in range(TIME.step):
+            self._cycle()
+        self._state = self._getState()
+        return self._state
+
+    def _getState(self):
+        blueDamageOutput = sum(r.damage for r in self._redRobots)
+        redDamageOutput = sum(r.damage for r in self._blueRobots)
+        bluesDead = all(r.hp == 0 for r in self._blueRobots)
+        redsDead = all(r.hp == 0 for r in self._redRobots)
         winner = Winner.tbd
 
         if redsDead and not bluesDead:
             winner = Winner.blue
         elif bluesDead and not redsDead:
             winner = Winner.red
-        elif self.stepsRemaining <= 0:
+        elif self._cyclesRemaining <= 0:
             if blueDamageOutput > redDamageOutput:
                 winner = Winner.blue
             elif redDamageOutput > blueDamageOutput:
                 winner = Winner.red
             else:
                 winner = Winner.tied
-
         return GameState(
-            timeRemaining=self.stepsRemaining / TIME.second,
-            blueRobotsState=(r.getState() for r in self.blueRobots),
-            redRobotsState=(r.getState() for r in self.redRobots),
-            blueDamageOutput=blueDamageOutput,
-            redDamageOutput=redDamageOutput,
+            timeRemaining=self._cyclesRemaining / TIME.second,
+            blueState=TeamState(robotStates=(r.getState() for r in self._blueRobots), damageOutput=blueDamageOutput),
+            redState=TeamState(robotStates=(r.getState() for r in self._blueRobots), damageOutput=redDamageOutput),
             winner=winner)
 
-    def _step(self):
-        for robot in [*self.blueRobots, *self.redRobots]:
-            self._stepRobot(robot)
+    def _cycle(self):
+        for robot in [*self._blueRobots, *self._redRobots]:
+            self._cycleRobot(robot)
+        for index in reversed(range(len(self._bullets))):
+            if self._cycleBullet(self._bullets[index]):
+                del self._bullets[index]
+        self._cyclesRemaining -= 1
 
-        for index in reversed(range(len(self.bullets))):
-            if self._stepBullet(self.bullets[index]):
-                del self.bullets[index]
-        self.stepsRemaining -= 1
+    def _cycleRobot(self, robot: Robot):
+        robot.debuffTimeoutCycles -= min(1, robot.debuffTimeoutCycles)
+        robot.shotCooldownCycles -= min(1, robot.shotCooldownCycles)
 
-    def _stepRobot(self, robot: Robot):
-        robot.debuffTimeoutSteps -= min(1, robot.debuffTimeoutSteps)
-        robot.shotCooldownSteps -= min(1, robot.shotCooldownSteps)
-
-        if not self.stepsRemaining % TIME.heatSettlement:
+        if not self._cyclesRemaining % TIME.heatSettlement:
             robot.heat, robot.hp = ROBOT.settleHeat(robot.heat, robot.hp)
-        if not robot.debuffTimeoutSteps:
-            robot.canMove, robot.canShoot = True, True
-
+        if not robot.debuffTimeoutCycles:
+            robot.canMove = True
+            robot.canShoot = True
         if not robot.hp:
             return
 
         if any([robot.speed.x, robot.speed.y, robot.rotationSpeed]):  # move chassis
             center, rotation, corners = robot.center.copy(), robot.rotation, robot.corners.copy()
             robot.center += robot.speed.transform(angle=rotation)
-            robot.rotation = (robot.rotation + robot.rotationSpeed) % (2 * PI)
+            robot.rotation = (robot.rotation + robot.rotationSpeed) % (2 * math.pi)
             robot.corners = [p.transform(robot.center, robot.rotation) for p in ROBOT.rect.corners]
 
             if self._robotInterferes(robot):
@@ -81,25 +85,25 @@ class Game:
         robot.gimbalYaw = min(max(robot.gimbalYaw + robot.gimbalYawSpeed, -MOTION.gimbalYawRange / 2), MOTION.gimbalYawRange / 2)
         robot.armors = [l.transform(robot.center, robot.rotation) for l in ROBOT.armors]
 
-        if all([robot.isShooting, not robot.shotCooldownSteps, robot.ammo, robot.canShoot]):  # shoot
-            self.bullets.append(Bullet(robot))
+        if all([robot.isShooting, not robot.shotCooldownCycles, robot.ammo, robot.canShoot]):  # shoot
+            self._bullets.append(Bullet(robot))
             robot.ammo -= 1
-            robot.shotCooldownSteps = TIME.shotCooldown
+            robot.shotCooldownCycles = TIME.shotCooldown
             robot.heat += BULLET.speed
 
-    def _stepBullet(self, bullet: Bullet):
+    def _cycleBullet(self, bullet: Bullet):
         center = bullet.center.copy()
-        bullet.step()
+        bullet.cycle()
         trajectory = Line(center, bullet.center)
 
         return any([
             not FIELD.rect.contains(bullet.center),
             any(r.intersects(trajectory) for r in FIELD.high_barriers),
-            any(r.absorbsBullet(trajectory) for r in [*self.blueRobots, *self.redRobots] if r.id_ != bullet.ownerId)
+            any(r.absorbsBullet(trajectory) for r in [*self._blueRobots, *self._redRobots] if r.id_ != bullet.ownerId)
         ])
 
     def _robotInterferes(self, robot: Robot):
         return any([
             any(not FIELD.rect.contains(p) for p in robot.corners),
             any(robot.hitsBarrier(r) for r in [*FIELD.low_barriers, *FIELD.high_barriers]),
-            any(robot.hitsRobot(r) for r in [*self.blueRobots, *self.redRobots] if r != robot)])
+            any(robot.hitsRobot(r) for r in [*self._blueRobots, *self._redRobots] if r != robot)])

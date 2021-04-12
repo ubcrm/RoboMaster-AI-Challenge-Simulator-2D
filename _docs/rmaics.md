@@ -32,7 +32,7 @@ The return values for `step` are defined in []()
 # action format (int, np.array): [['x', 'y', 'rotate', 'yaw', 'shoot', 'supply', 'shoot_mode', 'auto_aim'], ...]
 # action.shape = (car_num, 8)
 actions = [[1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1]]
-obs, reward, done, _ = game.advance(actions)
+obs, reward, done, _ = game.step(actions)
 ```
 
 ### 3. Use keyboard control

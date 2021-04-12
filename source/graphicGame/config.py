@@ -10,7 +10,7 @@ class TEXT:
     infoCoords = [(195 + 4 * 41 * i, 482) for i in range(4)]
 
 
-class GRAPHICS:
+class RENDER:
     offset = (10, -10)
     screenDims = (828, 638)
     background = pygame.image.load(IMAGE_DIR / 'background.png'), (0, 0)

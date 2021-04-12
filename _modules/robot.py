@@ -78,7 +78,7 @@ class Robot:
 
         if stat:
             for line in [*chassis_outline, *shield_outline, *armor_panels]:
-                line.transform(self.center, self.rotation)._display(screen)
+                line.transform(self.center, self.rotation).render(screen)
 
     def collides_chassis(self, rect: Rectangle):
         lines = [l.transform(self.center, self.rotation) for l in chassis_outline]

@@ -11,5 +11,5 @@ class Bullet:
         relativeSpeed = Point(random.gauss(BULLET.speed, BULLET.speedSigma), random.gauss(0, BULLET.speedSigma))
         self.speed = relativeSpeed.transform(angle=owner.rotation + owner.gimbalYaw) + owner.speed.transform(angle=owner.rotation)
 
-    def step(self):
+    def cycle(self):
         self.center += self.speed

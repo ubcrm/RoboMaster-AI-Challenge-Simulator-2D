@@ -46,13 +46,13 @@ class record_player(object):
         stop = False
         flag = 0
         while True:
-            self.time = self.memory[i].stepsRemaining
+            self.time = self.memory[i]._cyclesRemaining
             self.cars = self.memory[i].robots_status
             self.car_num = len(self.cars)
             self.compet_info = self.memory[i].compet_info
             self.detect = self.memory[i].detect
             self.vision = self.memory[i].vision
-            self.bullets = self.memory[i].bullets
+            self.bullets = self.memory[i]._bullets
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     return

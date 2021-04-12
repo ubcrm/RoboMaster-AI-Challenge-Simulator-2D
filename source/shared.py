@@ -3,12 +3,10 @@ from dataclasses import dataclass
 import pathlib
 import os
 
-PI = 3.1416
-RAD2DEG = 180. / PI
-FIELD_DIMS = (808, 448)
-
 SOURCE_DIR = pathlib.Path(os.path.dirname(__file__))
 IMAGE_DIR = SOURCE_DIR / 'assets/images'
+FIELD_DIMS = (808, 448)
+ROBOT_COUNT = 2  # robots per team
 
 
 class Team(Enum):
@@ -16,16 +14,11 @@ class Team(Enum):
     red = 1
 
 
-class GameMode(Enum):
-    oneVsOne = 1
-    twoVsTwo = 2
-
-
 class Winner(Enum):
     blue = 0
     red = 1
     tied = 2
-    tbd = 3
+    tbd = 3  # to be determined - game in progress
 
 
 class ZoneType(Enum):
@@ -63,19 +56,23 @@ class RobotState:
 
 
 @dataclass(frozen=True)
+class TeamState:
+    robotStates: tuple[RobotState, RobotState]
+    damageOutput: int
+
+
+@dataclass(frozen=True)
 class GameState:
     timeRemaining: float
-    blueRobotsState: tuple[RobotState]
-    redRobotsState: tuple[RobotState]
-    blueDamageOutput: int
-    redDamageOutput: int
+    blueState: TeamState
+    redState: TeamState
     winner: Winner
 
 
 @dataclass(frozen=True)
 class RobotCommand:  # throttle values in range [-1, 1]
-    x: float
-    y: float
-    rotation: float
-    gimbalYaw: float
-    shoot: bool
+    x: float = 0.
+    y: float = 0.
+    rotation: float = 0.
+    gimbalYaw: float = 0.
+    shoot: bool = False

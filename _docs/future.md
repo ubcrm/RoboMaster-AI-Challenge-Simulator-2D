@@ -46,7 +46,7 @@ actions = np.array([[1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1]])
 
 t1 = time.time()
 for _ in range(3600): # 3600epoch = 180s
-    obs = game.advance(actions)
+    obs = game.step(actions)
 t2 = time.time()
 print(t2-t1)
 ```
