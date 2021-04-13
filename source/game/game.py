@@ -9,7 +9,7 @@ from shared import Team, Winner, RobotCommand, GameState, TeamState
 class Game:
     def __init__(self):
         self._state: GameState = None
-        self._cyclesRemaining = self._blueRobots = self._redRobots = self._bullets = None
+        self._cyclesRemaining = self._blueRobots = self._redRobots = self._bullets = self._zones = None
 
     def reset(self):
         self._cyclesRemaining = TIME.gameDuration

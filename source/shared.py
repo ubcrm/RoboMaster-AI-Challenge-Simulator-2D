@@ -66,6 +66,7 @@ class GameState:
     timeRemaining: float
     blueState: TeamState
     redState: TeamState
+    zoneTypes: tuple[ZoneType, ZoneType, ZoneType, ZoneType, ZoneType, ZoneType]
     winner: Winner
 
 

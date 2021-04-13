@@ -1,5 +1,6 @@
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+from source.game.game import Game
 from source.graphicGame.graphicGame import GraphicGame
 from source.interactiveGame.interactiveGame import InteractiveGame
 

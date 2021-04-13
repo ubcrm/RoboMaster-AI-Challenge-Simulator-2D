@@ -7,13 +7,10 @@ def randomize_zones():
 
 
 class Zone:
-    count = 0
-
-    def __init__(self):
-        self.rect = ZONE.rects[Zone.count]
+    def __init__(self, index: int):
+        self.rect = ZONE.rects[index]
         self.type = None
         self.activation_status = None
-        Zone.count += 1
 
     def apply(self, robots):
         for robot in robots:

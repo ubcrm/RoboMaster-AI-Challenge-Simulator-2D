@@ -1,9 +1,7 @@
 import pygame
 from graphicGame.graphicGame import GraphicGame
 from shared import RobotCommand
-
-DELAY = 75
-SHORT_DELAY = 10
+from interactiveGame.config import DELAY, SHORT_DELAY, GUIDE_RENDER
 
 
 class InteractiveGame:
@@ -11,6 +9,7 @@ class InteractiveGame:
         self._game = GraphicGame()
         self._selectedId = None
         self._speedUp = False
+        self._showGuide = False
 
     def reset(self):
         self._game.reset()
@@ -18,6 +17,9 @@ class InteractiveGame:
         while (commands := self._receiveCommands()) is not None:
             self._game.step(*commands)
             self._game.render()
+            if self._showGuide:  # this is bad and violates LoD, what to do instead?
+                self._game._screen.blit(*GUIDE_RENDER)
+                pygame.display.flip()
             pygame.time.wait(SHORT_DELAY if self._speedUp else DELAY)
 
     def _receiveCommands(self):
@@ -26,6 +28,7 @@ class InteractiveGame:
             if (event.type == pygame.QUIT) or pressed[pygame.K_ESCAPE]:
                 return None
         self._speedUp = pressed[pygame.K_LSHIFT]
+        self._showGuide = pressed[pygame.K_TAB]
 
         if pressed[pygame.K_BACKQUOTE]: self._selectedId = 0
         elif pressed[pygame.K_1]: self._selectedId = 1
