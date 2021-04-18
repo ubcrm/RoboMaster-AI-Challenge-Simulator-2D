@@ -28,18 +28,18 @@ class Winner(enum.Enum):
 
 
 class ZoneType(enum.Enum):
-    blueHpBuff = 0
-    redHpBuff = 1
-    blueAmmoBuff = 2
-    redAmmoBuff = 3
-    moveDebuff = 4
-    shootDebuff = 5
+    blue_hp_buff = 0
+    red_hp_buff = 1
+    blue_ammo_buff = 2
+    red_ammo_buff = 3
+    move_debuff = 4
+    shoot_debuff = 5
 
 
 @dataclasses.dataclass(frozen=True)
 class ZoneState:
     type_: ZoneType
-    isActivated: bool
+    is_activated: bool
 
 
 @dataclasses.dataclass(frozen=True)
@@ -47,37 +47,37 @@ class RobotState:
     x: float
     y: float
     rotation: float
-    gimbalYaw: float
+    gimbal_yaw: float
     ammo: int
     heat: int
     hp: int
-    canMove: bool
-    canShoot: bool
-    debuffTimeout: float
+    can_move: bool
+    can_shoot: bool
+    debuff_timeout: float
 
 
 @dataclasses.dataclass(frozen=True)
 class TeamState:
-    _zeroState: RobotState
-    _oneState: RobotState
-    damageOutput: int
+    _zero_state: RobotState
+    _one_state: RobotState
+    damage_output: int
     
     @property
-    def robotStates(self):
-        return {RobotNumber.zero: self._zeroState, RobotNumber.one: self._oneState}
+    def robot_states(self):
+        return {RobotNumber.zero: self._zero_state, RobotNumber.one: self._one_state}
 
 
 @dataclasses.dataclass(frozen=True)
 class GameState:
-    _blueState: TeamState
-    _redState: TeamState
-    timeRemaining: float
-    zoneStates: typing.Tuple[ZoneState, ZoneState, ZoneState, ZoneState, ZoneState, ZoneState]
+    _blue_state: TeamState
+    _red_state: TeamState
+    time_remaining: float
+    zone_states: typing.Tuple[ZoneState, ZoneState, ZoneState, ZoneState, ZoneState, ZoneState]
     winner: Winner
     
     @property
-    def teamStates(self):
-        return {Team.blue: self._blueState, Team.red: self._redState}
+    def team_states(self):
+        return {Team.blue: self._blue_state, Team.red: self._red_state}
 
 
 @dataclasses.dataclass(frozen=True)
@@ -85,5 +85,5 @@ class RobotCommand:  # throttle values in range [-1, 1]
     x: float = 0.
     y: float = 0.
     rotation: float = 0.
-    gimbalYaw: float = 0.
+    gimbal_yaw: float = 0.
     shoot: bool = False
