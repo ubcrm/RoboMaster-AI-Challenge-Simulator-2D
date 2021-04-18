@@ -1,27 +1,33 @@
-from enum import Enum
-from dataclasses import dataclass
+import enum
+import dataclasses
+import typing
 import pathlib
 import os
 
 SOURCE_DIR = pathlib.Path(os.path.dirname(__file__))
 IMAGE_DIR = SOURCE_DIR / 'assets/images'
 FIELD_DIMS = (808, 448)
-ROBOT_COUNT = 2  # robots per team
+ROBOT_COUNT = 2  # per team
 
 
-class Team(Enum):
+class Team(enum.Enum):
     blue = 0
     red = 1
 
 
-class Winner(Enum):
+class RobotNumber(enum.Enum):
+    zero = 0
+    one = 1
+
+
+class Winner(enum.Enum):
     blue = 0
     red = 1
     tied = 2
     tbd = 3  # to be determined - game in progress
 
 
-class ZoneType(Enum):
+class ZoneType(enum.Enum):
     blueHpBuff = 0
     redHpBuff = 1
     blueAmmoBuff = 2
@@ -30,47 +36,51 @@ class ZoneType(Enum):
     shootDebuff = 5
 
 
-@dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)
+class ZoneState:
+    type_: ZoneType
+    isActivated: bool
+
+
+@dataclasses.dataclass(frozen=True)
 class RobotState:
     x: float
     y: float
     rotation: float
     gimbalYaw: float
-
-    xSpeed: float
-    ySpeed: float
-    rotationSpeed: float
-    gimbalYawSpeed: float
-
     ammo: int
     heat: int
     hp: int
-    isShooting: bool
-    shotCooldown: float
-
-    barrierHits: int
-    robotHits: int
     canMove: bool
     canShoot: bool
     debuffTimeout: float
 
 
-@dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)
 class TeamState:
-    robotStates: tuple[RobotState, RobotState]
+    _zeroState: RobotState
+    _oneState: RobotState
     damageOutput: int
+    
+    @property
+    def robotStates(self):
+        return {RobotNumber.zero: self._zeroState, RobotNumber.one: self._oneState}
 
 
-@dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)
 class GameState:
+    _blueState: TeamState
+    _redState: TeamState
     timeRemaining: float
-    blueState: TeamState
-    redState: TeamState
-    zoneTypes: tuple[ZoneType, ZoneType, ZoneType, ZoneType, ZoneType, ZoneType]
+    zoneStates: typing.Tuple[ZoneState, ZoneState, ZoneState, ZoneState, ZoneState, ZoneState]
     winner: Winner
+    
+    @property
+    def teamStates(self):
+        return {Team.blue: self._blueState, Team.red: self._redState}
 
 
-@dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)
 class RobotCommand:  # throttle values in range [-1, 1]
     x: float = 0.
     y: float = 0.
