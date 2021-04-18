@@ -47,7 +47,7 @@ class record_player(object):
         flag = 0
         while True:
             self.time = self.memory[i].time
-            self.cars = self.memory[i].robots
+            self.cars = self.memory[i].robots_status
             self.car_num = len(self.cars)
             self.compet_info = self.memory[i].compet_info
             self.detect = self.memory[i].detect

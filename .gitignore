@@ -3,3 +3,5 @@
 gym_rmaics/gym_rmaics.egg-info
 **/__pycache__
 **.pyc
+records/*.json
+records/*.npy
