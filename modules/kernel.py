@@ -1,9 +1,4 @@
-<<<<<<< HEAD
 from typing import List
-
-import pygame
-=======
->>>>>>> d5aad1b65f11f1cf789af4b948ea9d6aa83e1241
 import numpy as np
 import json
 import pygame
