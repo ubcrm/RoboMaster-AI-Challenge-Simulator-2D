@@ -1,4 +1,8 @@
+from pathlib import Path
+
 EPSILON = 1E-5
+
+ROOT_PATH = Path(__file__).resolve().parent.parent
 
 
 class FIELD:
@@ -62,19 +66,23 @@ class COLOR:
     black = (0, 0, 0)
 
 
+def resolve_file_path(file_path):
+    return str(ROOT_PATH / file_path)
+
+
 class IMAGE:
-    bullet = 'images/robot/bullet.png'
-    inactive_zone = 'images/zone/inactive.png'
-    activated_zone = 'images/zone/activated.png'
-    zone_icon = 'images/zone/{}.png'
-    blue_robot = 'images/robot/blue.png'
-    red_robot = 'images/robot/red.png'
-    dead_robot = 'images/robot/dead.png'
-    gimbal = 'images/robot/gimbal.png'
-    stats_panel = 'images/stats_panel.png'
-    coords = 'images/coords.png'
-    logo = 'images/logo.png'
+    bullet = resolve_file_path('images/robot/bullet.png')
+    inactive_zone = resolve_file_path('images/zone/inactive.png')
+    activated_zone = resolve_file_path('images/zone/activated.png')
+    zone_icon = resolve_file_path('images/zone/{}.png')
+    blue_robot = resolve_file_path('images/robot/blue.png')
+    red_robot = resolve_file_path('images/robot/red.png')
+    dead_robot = resolve_file_path('images/robot/dead.png')
+    gimbal = resolve_file_path('images/robot/gimbal.png')
+    stats_panel = resolve_file_path('images/stats_panel.png')
+    coords = resolve_file_path('images/coords.png')
+    logo = resolve_file_path('images/logo.png')
 
 
 class FILE:
-    transitions = 'records/transitions.json'
+    transitions = resolve_file_path('records/transitions.json')

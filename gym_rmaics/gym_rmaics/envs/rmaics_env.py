@@ -3,9 +3,12 @@ from typing import List
 import gym
 from gym import error, spaces
 from gym import utils
+import numpy as np
 import logging
 
-from modules.constants import FIELD, IMAGE
+from modules.constants import FIELD
+from modules.geometry import to_draw_coords
+from modules.objects import State
 from modules.rmaics import Rmaics
 
 logger = logging.getLogger(__name__)
@@ -28,25 +31,35 @@ class RMAICSEnv(gym.Env):
     def game(self):
         return self.rmaics.game
 
-    def step(self, action: List[float]):
+    @staticmethod
+    def _parse_observation(observation: State):
+        robot_state_dict = observation.robots_status[0]
+        field_dims = FIELD.dims
+        robot_coords = to_draw_coords([robot_state_dict["x_center"], robot_state_dict["y_center"]])
+        robot_coords = [robot_coords[0] / field_dims[0], robot_coords[1] / field_dims[1]]
+        return np.array(robot_coords)
+
+    def step(self, action: np.array):
         self._take_action(action)
         self.game.one_epoch()
         reward = self.rmaics.get_reward()
-        ob = self.rmaics.get_observation()
+        ob = self._parse_observation(self.rmaics.get_observation())
         episode_over = self.iter > self.num_steps
         self.iter += 1
+
         return ob, reward, episode_over, {}
 
-    def _take_action(self, action: List[float]):
-        y = action[0] - action[1]  # up - down = y movement
-        x = action[3] - action[2]  # right - left = x movement
+    def _take_action(self, np_action: np.array):
+        action = list(np_action)
+        x = action[0]
+        y = action[1]
 
         self.game.set_actions([x, y, 0, 0, 0])
 
     def reset(self):
         reset_state = self.rmaics.reset()
         self.iter = 0
-        return reset_state
+        return self._parse_observation(reset_state)
 
     def render(self, mode="human"):
         self.game.draw()
