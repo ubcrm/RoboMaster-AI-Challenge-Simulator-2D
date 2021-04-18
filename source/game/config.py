@@ -1,44 +1,43 @@
-import math
-from game.geometry import Point, Line, Rectangle, xMirrors, yMirrors, xyMirrors
+from geometry import Vector, LineSegment, Box, xMirrors, yMirrors, xyMirrors
 
 
 class FIELD:
-    rect = Rectangle(Point(808, 448))
+    box = Box(Vector(808, 448))
     low_barriers = [  # low barriers B2, B8, B5
-        *xyMirrors(Rectangle(Point(80, 20), Point(-214, 0))),
-        Rectangle(Point(35.4, 35.4))]
+        *xyMirrors(Box(Vector(80, 20), Vector(-214, 0))),
+        Box(Vector(35.4, 35.4))]
     high_barriers = [  # high barriers B1, B6, B3, B7, B4, B9
-        *xyMirrors(Rectangle(Point(100, 20), Point(-354, 114))),
-        *xyMirrors(Rectangle(Point(20, 100), Point(-244, -174))),
-        *xyMirrors(Rectangle(Point(100, 20), Point(0, 120.5)))]
+        *xyMirrors(Box(Vector(100, 20), Vector(-354, 114))),
+        *xyMirrors(Box(Vector(20, 100), Vector(-244, -174))),
+        *xyMirrors(Box(Vector(100, 20), Vector(0, 120.5)))]
 
 
 class ZONE:
-    dims = Point(36, 32)
-    rects = [  # F4, F1, F5, F2, F3, F6
-        *xyMirrors(Rectangle(dims, Point(354, -55))),
-        *xyMirrors(Rectangle(dims, Point(214, 59))),
-        *xyMirrors(Rectangle(dims, Point(0, 179.5)))]
-    hpBuff = 200
-    ammoBuff = 100
+    dims = Vector(36, 32)
+    boxes = [  # F4, F1, F5, F2, F3, F6
+        *xyMirrors(Box(dims, Vector(354, -55))),
+        *xyMirrors(Box(dims, Vector(214, 59))),
+        *xyMirrors(Box(dims, Vector(0, 179.5)))]
+    hp_buff = 200
+    ammo_buff = 100
 
 
 class ROBOT:
-    rect = Rectangle(Point(60, 50))
-    center = Point(354, 174)
+    box = Box(Vector(60, 50))
+    center = Vector(354, 174)
     hp = 2000
     ammo = 50
 
-    _armorLength = 14
+    _armor_length = 14
     armors = [  # front, left, right, back
-        Line(*yMirrors(Point(rect.dims.x / 2, _armorLength / 2))),
-        Line(*xMirrors(Point(_armorLength / 2, rect.dims.y / 2))),
-        Line(*xMirrors(Point(_armorLength / 2, -rect.dims.y / 2))),
-        Line(*yMirrors(Point(-rect.dims.x / 2, _armorLength / 2)))]
-    armorsDamage = [20, 40, 40, 60]
+        LineSegment(*yMirrors(Vector(box.dims.x / 2, _armor_length / 2))),
+        LineSegment(*xMirrors(Vector(_armor_length / 2, box.dims.y / 2))),
+        LineSegment(*xMirrors(Vector(_armor_length / 2, -box.dims.y / 2))),
+        LineSegment(*yMirrors(Vector(-box.dims.x / 2, _armor_length / 2)))]
+    armors_damage = [20, 40, 40, 60]
 
     @staticmethod
-    def settleHeat(heat: int, hp: int):  # barrel heat (rules 4.1.2)
+    def settle_heat(heat: int, hp: int):  # barrel heat (rules 4.1.2)
         if heat >= 360:
             hp -= (heat - 360) * 40
             heat = 360
@@ -49,24 +48,24 @@ class ROBOT:
 
 
 class MOTION:
-    xAccel, xSpeed = 0.25, 1.5
-    yAccel, ySpeed = 0.2, 1.2
-    rotationAccel, rotationSpeed = 0.005, 0.02
-    gimbalYawAccel, gimbalYawSpeed = 0.02, 0.05
-    reboundCoefficient = 0.3
-    gimbalYawRange = 4 / 3 * math.pi
+    x_accel, x_speed = 0.25, 1.5
+    y_accel, y_speed = 0.2, 1.2
+    rotation_accel, rotation_speed = 0.005, 0.02
+    gimbal_yaw_accel, gimbal_yaw_speed = 0.02, 0.05
+    rebound_coefficient = 0.3
+    gimbal_yaw_range = 4  # full range span
 
 
 class BULLET:
     speed = 20
-    speedSigma = 1
+    speed_sigma = 1
 
 
-class TIME:
+class CYCLES:
     step = 10
     second = 100  # changing this will have indirect consequences
-    shotCooldown = 8
-    heatSettlement = 10
-    debuffTimeout = 10 * second
-    zoneReset = 60 * second
-    gameDuration = 180 * second
+    shot_cooldown = 8
+    heat_settlement = 10
+    debuff_timeout = 10 * second
+    zone_reset = 60 * second
+    game_duration = 180 * second
