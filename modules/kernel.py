@@ -27,30 +27,39 @@ high_barriers = [B1, B3, B4, B4.mirror(), B3.mirror(), B1.mirror()]  # areas B1,
 
 class Kernel(object):
     def __init__(self, robot_count=4, render=False):
-        self.car_count = robot_count
-        self.render = render
+
         self.time, self.bullets, self.epoch, self.n, self.stat, self.memory, self.transitions, self.robots = None, None, None, None, None, None, None, None
         self._selected_robot_idx = None
+        self.screen = None
+        self.font = None
+        self.clock = None
+        self.end = None
+
+        self.car_count = robot_count
+        self.render = render
         self.zones = Zones()
         self.reset()
 
         if render:
-            import pygame
-            pygame.init()
-            self.screen = pygame.display.set_mode(FIELD.dims)
-            pygame.display.set_caption('UBC RoboMaster AI Challenge Simulator')
-            pygame.display.set_icon(pygame.image.load(IMAGE.logo))
+            self.init_screen()
 
-            pygame.font.init()
-            self.font = pygame.font.SysFont('mono', 12)
-            self.clock = pygame.time.Clock()
+    def init_screen(self):
+        import pygame
+        pygame.init()
+        self.screen = pygame.display.set_mode(FIELD.dims)
+        pygame.display.set_caption('UBC RoboMaster AI Challenge Simulator')
+        pygame.display.set_icon(pygame.image.load(IMAGE.logo))
+
+        pygame.font.init()
+        self.font = pygame.font.SysFont('mono', 12)
+        self.clock = pygame.time.Clock()
 
     def reset(self):
         self.time = TIME.match / TIME.unit
         self.bullets = []
         self.epoch = 0
         self._selected_robot_idx = 0
-        self.end = None    # winning team
+        self.end = None  # winning team
         self.stat = False
         self.memory = []
         self.transitions = []
