@@ -1,4 +1,5 @@
 import enum
+import functools
 import dataclasses
 import typing
 import pathlib
@@ -61,7 +62,7 @@ class GameState:
     zone_states: typing.Tuple[ZoneState, ...]
     winner: Winner
 
-    @property
+    @functools.cached_property
     def zone_state_by_type(self):
         return {s.type_: s for s in self.zone_states}
 
