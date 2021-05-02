@@ -4,6 +4,7 @@ import typing
 from game.game import Game
 from game.config import CYCLES
 from graphicGame.config import TEXT, COLOR, RENDER
+from shared import ZoneType
 
 
 class GraphicGame(Game):
@@ -22,6 +23,8 @@ class GraphicGame(Game):
 
     def _blit(self):
         self._screen.blit(*RENDER.background)
+        for zone in self._zones:
+            self._blit_zone(zone)
         for robot in self._blue_robots:
             self._blit_robot(robot)
         for robot in self._red_robots:
@@ -32,6 +35,14 @@ class GraphicGame(Game):
         self._blit_text(self._state.blue_state.damage_output, TEXT.info_coords[1])
         self._blit_text(self._state.red_state.damage_output, TEXT.info_coords[2])
         self._blit_text(self._state.winner.name, TEXT.info_coords[3])
+
+    def _blit_zone(self, zone: 'Zone'):
+        if zone.is_activated:
+            return
+        image = RENDER.zones[zone.type_]
+        rect = image.get_rect()
+        rect.center = zone.box.center.to_top_left(offset=RENDER.offset)
+        self._screen.blit(image, rect)
 
     def _blit_robot(self, robot: 'Robot'):
         if not robot.hp:
@@ -84,3 +95,4 @@ class GraphicGame(Game):
 
 from game.bullet import Bullet
 from game.robot import Robot
+from game.zone import Zone

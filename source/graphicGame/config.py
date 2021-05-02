@@ -1,5 +1,6 @@
 import pygame
-from shared import IMAGE_DIR
+from game.geometry import Vector
+from shared import IMAGE_DIR, ZoneType
 
 
 class TEXT:
@@ -20,6 +21,14 @@ class RENDER:
     red_robot = pygame.image.load(IMAGE_DIR / 'robot/red.png')
     dead_robot = pygame.image.load(IMAGE_DIR / 'robot/dead.png')
     gimbal = pygame.image.load(IMAGE_DIR / 'robot/gimbal.png')
+    zones = {
+        ZoneType.blue_hp_buff: pygame.image.load(IMAGE_DIR / 'zone/blue_hp_buff.png'),
+        ZoneType.red_hp_buff: pygame.image.load(IMAGE_DIR / 'zone/red_hp_buff.png'),
+        ZoneType.blue_ammo_buff: pygame.image.load(IMAGE_DIR / 'zone/blue_ammo_buff.png'),
+        ZoneType.red_ammo_buff: pygame.image.load(IMAGE_DIR / 'zone/red_ammo_buff.png'),
+        ZoneType.move_debuff: pygame.image.load(IMAGE_DIR / 'zone/move_debuff.png'),
+        ZoneType.shoot_debuff: pygame.image.load(IMAGE_DIR / 'zone/shoot_debuff.png')
+    }
 
 
 class COLOR:
