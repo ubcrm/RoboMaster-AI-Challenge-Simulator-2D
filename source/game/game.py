@@ -56,7 +56,7 @@ class Game:
             blue_state=TeamState(robot_states=tuple(r.state for r in self._blue_robots), damage_output=blue_damage_output),
             red_state=TeamState(robot_states=tuple(r.state for r in self._red_robots), damage_output=red_damage_output),
             time_remaining=self._cycles_remaining / CYCLES.second,
-            zone_states=(tuple(ZoneState(type_=z.type_, is_activated=z.is_activated) for z in self._zones)),
+            zone_states=(tuple(ZoneState(type_=z.type_, is_activated=z.is_activated, center=(z.box.center.x, z.box.center.y)) for z in self._zones)),
             winner=winner)
 
     def _cycle(self):

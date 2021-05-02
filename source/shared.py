@@ -30,6 +30,7 @@ class ZoneType(enum.Enum):
 class ZoneState:
     type_: ZoneType
     is_activated: bool
+    center: typing.Tuple[int, int]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -59,6 +60,10 @@ class GameState:
     time_remaining: float
     zone_states: typing.Tuple[ZoneState, ...]
     winner: Winner
+
+    @property
+    def zone_state_by_type(self):
+        return {s.type_: s for s in self.zone_states}
 
 
 @dataclasses.dataclass(frozen=True)
