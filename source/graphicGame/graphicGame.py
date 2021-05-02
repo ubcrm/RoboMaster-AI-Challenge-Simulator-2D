@@ -77,7 +77,7 @@ class GraphicGame(Game):
         bullet_rect.center = bullet.center.to_top_left(offset=RENDER.offset)
         self._screen.blit(RENDER.bullet, bullet_rect)
 
-    def _blit_text(self, text, position: tuple[int], color=COLOR.black):
+    def _blit_text(self, text, position: typing.Tuple[int, ...], color=COLOR.black):
         label = self._font.render(str(text), True, color)
         self._screen.blit(label, position)
 
