@@ -10,8 +10,8 @@ from shared import RobotState
 class Robot:
     def __init__(self, id_: int):
         self.id_ = id_
-        self.is_blue = FIELD.id_is_blue[id_]
-        self.is_zero = FIELD.id_is_zero[id_]
+        self.is_blue = ROBOT.id_is_blue[id_]
+        self.is_zero = ROBOT.id_is_zero[id_]
 
         self.center = ROBOT.center.mirror(self.is_blue, self.is_blue == self.is_zero)
         self.rotation = 0. if self.is_blue else math.pi

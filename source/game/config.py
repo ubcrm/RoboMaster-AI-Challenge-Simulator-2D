@@ -2,8 +2,6 @@ from game.geometry import Vector, LineSegment, Box, x_mirrors, y_mirrors, xy_mir
 
 
 class FIELD:
-    id_is_blue = {0: True, 1: True, 2: False, 3: False}  # blue, blue, red, red
-    id_is_zero = {0: True, 1: False, 2: True, 3: False}  # 0, 1, 0, 1
     box = Box(Vector(808, 448))
     low_barriers = [  # low barriers B2, B8, B5
         *xy_mirrors(Box(Vector(80, 20), Vector(-214, 0))),
@@ -29,6 +27,8 @@ class ROBOT:
     center = Vector(354, 174)
     hp = 2000
     ammo = 50
+    id_is_blue = {0: True, 1: True, 2: False, 3: False}  # blue, blue, red, red
+    id_is_zero = {0: True, 1: False, 2: True, 3: False}  # 0, 1, 0, 1
 
     _armor_length = 14
     armors = [  # front, left, right, back
