@@ -2,12 +2,12 @@ import numpy as np
 import pathlib
 
 # Indices of important robot properties in state.agents[car_num]
-from modules.constants import TIME
-from modules.geometry import Rectangle, Line
-from modules.robot import Robot
-from modules.waypoints.navigator import NavigationGraph
-from modules.waypoints.navigator import Navigator
-from modules.constants import FIELD
+# from source.shared import TIME
+from source.game.geometry import Box, LineSegment
+from source.game.robot import Robot
+# # from modules.waypoints.navigator import NavigationGraph
+# from modules.waypoints.navigator import Navigator
+from source.shared import FIELD_DIMS
 
 OWNER = 0
 POS_X = 1
@@ -16,11 +16,11 @@ ANGLE = 3
 YAW = 4
 BULLET_COUNT = 10
 
-B5 = Rectangle(35.4, 35.4, 0, 0, image='images/area/lcm.png')
-B2 = Rectangle(80, 20, -214, 0, image='images/area/lhm.png')
-B1 = Rectangle(100, 20, -354, 114, image='images/area/hhu.png')
-B3 = Rectangle(20, 100, -244, -174, image='images/area/hvu.png')
-B4 = Rectangle(100, 20, 0, 120.5, image='images/area/hhm.png')
+B5 = Box(35.4, 35.4, 0, 0, image='images/area/lcm.png')
+B2 = Box(80, 20, -214, 0, image='images/area/lhm.png')
+B1 = Box(100, 20, -354, 114, image='images/area/hhu.png')
+B3 = Box(20, 100, -244, -174, image='images/area/hvu.png')
+B4 = Box(100, 20, 0, 120.5, image='images/area/hhm.png')
 
 low_barriers = [B2, B2.mirror(), B5]  # areas B2, B5, B8
 high_barriers = [B1, B3, B4, B4.mirror(), B3.mirror(), B1.mirror()]  # areas B1, B3, B4, B6, B7, B9
@@ -39,7 +39,7 @@ class Actor:
         self.prev_commands = None
         self.next_waypoint = None
         self.destination = None
-        self.nav = Navigator(pathlib.Path('modules', 'waypoints', 'data.json'))
+        # self.nav = Navigator(pathlib.Path('modules', 'waypoints', 'data.json'))
         self.robot = robot
         self.state = None
         self.barriers = low_barriers + high_barriers
@@ -438,7 +438,7 @@ class Actor:
         """
         Given two points, it checks if the line created by those points intersect any map barrier
         """
-        line = Line(point1, point2)
+        line = LineSegment(point1, point2)
         for barrier in self.barriers:
             if barrier.intersects(line):
                 return True
