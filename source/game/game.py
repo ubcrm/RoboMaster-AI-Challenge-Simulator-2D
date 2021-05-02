@@ -18,12 +18,12 @@ class Game:
     def _robots(self):
         return *self._blue_robots, *self._red_robots
 
-    def reset(self):
+    def reset(self) -> GameState:
         self.__init__()
         self._update_state()
         return self._state
 
-    def step(self, blue_commands: tuple[RobotCommand], red_commands: tuple[RobotCommand]):
+    def step(self, blue_commands: tuple[RobotCommand], red_commands: tuple[RobotCommand]) -> GameState:
         if not self._cycles_remaining % CYCLES.zone_reset:
             self._randomize_zones()
         for robot, command in zip(self._robots, [*blue_commands, *red_commands]):
