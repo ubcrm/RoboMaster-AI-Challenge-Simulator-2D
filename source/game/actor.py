@@ -8,7 +8,7 @@ from source.game.config import FIELD
 from source.game.robot import Robot
 # # from modules.waypoints.navigator import NavigationGraph
 # from modules.waypoints.navigator import Navigator
-from source.shared import FIELD_DIMS
+from source.shared import FIELD_DIMS, GameState, RobotState
 
 OWNER = 0
 POS_X = 1
@@ -36,32 +36,70 @@ def det(v0, v1):
 
 
 class Actor:
-    def __init__(self, car_num, robot):
+    def __init__(self, actor_id, game_state: GameState):
+        """
+        Creates an Actor object to control the robot. It requires information about the acting robot's id
+        and state, state of all the other robots (for their location), the
+        board's buff/debuff zone location, the navigation system, the barrier vertices, all of which are
+        initialised at the beginning.
+        It also holds
+        """
+
+        """ID and status variables"""
+        self.actor_id = actor_id
+        self.state: RobotState = self.get_robot_state_from_game_state(game_state)
+
+        """Board waypoint variables"""
+        self.hp_waypoint = None
+        self.no_shoot_waypoint = None
+        self.no_move_waypoint = None
+        self.ammo_waypoint = None
+        self.centre_waypoint = None
+        self.spawn_waypoint = None
+        self.initialise_waypoints()
+
+        """Navigation variables"""
         self.prev_commands = None
         self.next_waypoint = None
         self.destination = None
         # self.nav = Navigator(pathlib.Path('modules', 'waypoints', 'data.json'))
-        self.robot = robot
-        self.state = None
-        self.barriers = low_barriers + high_barriers
-        self.next_state_commands = [0, 0, 0, 0, 0]
-        self.buff_waypoint = [0, 0]
-        self.no_shoot_waypoint = [0, 0]
-        self.no_move_waypoint = [0, 0]
-        self.ammo_waypoint = [0, 0]
+        # self.robot = robot
 
-        # TODO replace dummy values with proper ones representing starting state
+        """Auto-aim functionality dependent variables """
+        self.barriers = FIELD.low_barriers + FIELD.high_barriers
 
+        """Decision making status variables"""
         self.has_ammo = False
         self.not_shooting = True
         self.has_buff = False
         self.is_at_centre = False
-        self.centre_waypoint = self.nearest_waypoint(np.array([0, 0]))
         self.is_at_spawn_zone = False
-        # TODO: Check which team the robot is on to determine their proper spawn zones
-        self.spawn_waypoint = self.nearest_waypoint(np.array(FIELD.spawn_center))
-        self.buff_waypoint = None
-        self.ammo_waypoint = None
+
+        """Variable to hold commands that are passed onto the step function"""
+        self.next_state_commands = [0, 0, 0, 0, 0]
+
+    def get_robot_state_from_game_state(self, game_state: GameState):
+        """
+        Returns the actor's specific robot state given using its id
+        """
+        if self.actor_id % 2 == 0:          # If in blue team
+            if self.actor_id == 0:
+                return game_state.blue_state.robot_states[0]
+            else:
+                return game_state.blue_state.robot_states[1]
+        else:                               # If in red team
+            if self.actor_id == 1:
+                return game_state.red_state.robot_states[0]
+            else:
+                return game_state.blue_state.robot_states[1]
+
+    def initialise_waypoints(self):
+        """
+        Sets up the robots waypoints based on the robot id
+        :return:
+        """
+        # TODO
+        pass
 
     def commands_from_state(self, state):
         """Testing method for movement and delivery of commands. To be replaced
@@ -164,7 +202,7 @@ class Actor:
                     else:
                         self.destination = self.centre_waypoint
                 else:
-                    self.destination = self.buff_waypoint
+                    self.destination = self.hp_waypoint
             else:
                 if self.is_at_centre:
                     self.wait()
@@ -188,11 +226,11 @@ class Actor:
             if self.robot.is_blue:
                 # Team blue waypoints
                 self.ammo_waypoint = self.state.zones.get_center_by_type('ammo_blue')
-                self.buff_waypoint = self.state.zones.get_center_by_type('hp_blue')
+                self.hp_waypoint = self.state.zones.get_center_by_type('hp_blue')
             else:
                 # Team red waypoints
                 self.ammo_waypoint = self.state.zones.get_center_by_type('ammo_red')
-                self.buff_waypoint = self.state.zones.get_center_by_type('hp_red')
+                self.hp_waypoint = self.state.zones.get_center_by_type('hp_red')
         self.no_shoot_waypoint = self.state.zones.get_center_by_type('no_shoot')
         self.no_move_waypoint = self.state.zones.get_center_by_type('no_move')
 
