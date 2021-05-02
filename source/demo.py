@@ -5,8 +5,8 @@ from shared import RobotCommand
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 from game.game import Game
-from graphicGame.graphicGame import GraphicGame
-from interactiveGame.interactiveGame import InteractiveGame
+from graphic_game.graphic_game import GraphicGame
+from interactive_game.interactive_game import InteractiveGame
 
 
 if __name__ == '__main__':

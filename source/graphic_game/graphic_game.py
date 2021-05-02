@@ -3,7 +3,7 @@ import math
 import typing
 from game.game import Game
 from game.config import CYCLES
-from graphicGame.config import TEXT, COLOR, RENDER
+from graphic_game.config import TEXT, COLOR, RENDER
 from shared import ZoneType
 
 

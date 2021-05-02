@@ -1,7 +1,7 @@
 import pygame
-from graphicGame.graphicGame import GraphicGame
+from graphic_game.graphic_game import GraphicGame
 from shared import RobotCommand
-from interactiveGame.config import DELAY, SHORT_DELAY, GUIDE_RENDER
+from interactive_game.config import DELAY, SHORT_DELAY, GUIDE_RENDER
 
 
 class InteractiveGame:
