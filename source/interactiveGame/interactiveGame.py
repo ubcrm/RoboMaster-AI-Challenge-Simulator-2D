@@ -15,9 +15,9 @@ class InteractiveGame:
     def _run(self):
         while (commands := self._receive_commands()) is not None:
             self._game.step(*commands)
+            self._game._blit()
             if self._view_guide:
                 self._game._screen.blit(*GUIDE_RENDER)  # this is not good
-            self._game._blit()
             pygame.display.flip()
             pygame.time.wait(SHORT_DELAY if self._speed_up else DELAY)
 
