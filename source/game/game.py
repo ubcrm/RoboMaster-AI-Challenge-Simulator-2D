@@ -1,5 +1,6 @@
 import time
 import random
+import typing
 from game.robot import Robot
 from game.zone import Zone
 from game.config import CYCLES
@@ -23,7 +24,7 @@ class Game:
         self._update_state()
         return self._state
 
-    def step(self, blue_commands: tuple[RobotCommand], red_commands: tuple[RobotCommand]) -> GameState:
+    def step(self, blue_commands: typing.Tuple[RobotCommand, ...], red_commands: typing.Tuple[RobotCommand, ...]) -> GameState:
         if not self._cycles_remaining % CYCLES.zone_reset:
             self._randomize_zones()
         for robot, command in zip(self._robots, [*blue_commands, *red_commands]):
