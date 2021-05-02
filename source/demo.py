@@ -6,5 +6,4 @@ from source.interactiveGame.interactiveGame import InteractiveGame
 
 
 if __name__ == '__main__':
-    iGame = InteractiveGame()
-    iGame.reset()
+    InteractiveGame()

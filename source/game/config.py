@@ -1,23 +1,25 @@
-from geometry import Vector, LineSegment, Box, xMirrors, yMirrors, xyMirrors
+from game.geometry import Vector, LineSegment, Box, x_mirrors, y_mirrors, xy_mirrors
 
 
 class FIELD:
+    id_is_blue = {0: True, 1: True, 2: False, 3: False}  # blue, blue, red, red
+    id_is_zero = {0: True, 1: False, 2: True, 3: False}  # 0, 1, 0, 1
     box = Box(Vector(808, 448))
     low_barriers = [  # low barriers B2, B8, B5
-        *xyMirrors(Box(Vector(80, 20), Vector(-214, 0))),
+        *xy_mirrors(Box(Vector(80, 20), Vector(-214, 0))),
         Box(Vector(35.4, 35.4))]
     high_barriers = [  # high barriers B1, B6, B3, B7, B4, B9
-        *xyMirrors(Box(Vector(100, 20), Vector(-354, 114))),
-        *xyMirrors(Box(Vector(20, 100), Vector(-244, -174))),
-        *xyMirrors(Box(Vector(100, 20), Vector(0, 120.5)))]
+        *xy_mirrors(Box(Vector(100, 20), Vector(-354, 114))),
+        *xy_mirrors(Box(Vector(20, 100), Vector(-244, -174))),
+        *xy_mirrors(Box(Vector(100, 20), Vector(0, 120.5)))]
 
 
 class ZONE:
     dims = Vector(36, 32)
     boxes = [  # F4, F1, F5, F2, F3, F6
-        *xyMirrors(Box(dims, Vector(354, -55))),
-        *xyMirrors(Box(dims, Vector(214, 59))),
-        *xyMirrors(Box(dims, Vector(0, 179.5)))]
+        *xy_mirrors(Box(dims, Vector(354, -55))),
+        *xy_mirrors(Box(dims, Vector(214, 59))),
+        *xy_mirrors(Box(dims, Vector(0, 179.5)))]
     hp_buff = 200
     ammo_buff = 100
 
@@ -30,10 +32,10 @@ class ROBOT:
 
     _armor_length = 14
     armors = [  # front, left, right, back
-        LineSegment(*yMirrors(Vector(box.dims.x / 2, _armor_length / 2))),
-        LineSegment(*xMirrors(Vector(_armor_length / 2, box.dims.y / 2))),
-        LineSegment(*xMirrors(Vector(_armor_length / 2, -box.dims.y / 2))),
-        LineSegment(*yMirrors(Vector(-box.dims.x / 2, _armor_length / 2)))]
+        LineSegment(*y_mirrors(Vector(box.dims.x / 2, _armor_length / 2))),
+        LineSegment(*x_mirrors(Vector(_armor_length / 2, box.dims.y / 2))),
+        LineSegment(*x_mirrors(Vector(_armor_length / 2, -box.dims.y / 2))),
+        LineSegment(*y_mirrors(Vector(-box.dims.x / 2, _armor_length / 2)))]
     armors_damage = [20, 40, 40, 60]
 
     @staticmethod

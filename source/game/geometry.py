@@ -1,105 +1,104 @@
 import math
-from typing import Union
-from shared import FIELD_DIMS
+import typing
 
 
-class Point:
+class Vector:
     def __init__(self, x: float, y: float):
         self.x = x
         self.y = y
 
     @classmethod
-    def fromTopLeft(cls, x: float, y: float):
-        return cls(x - FIELD_DIMS[0] / 2 + 0.5, -y + FIELD_DIMS[1] / 2 + 0.5)
+    def from_top_left(cls, x: float, y: float):
+        return cls(x - 404, 224 - y)
 
-    def toTopLeft(self, offset=(0., 0.)):
-        return round(FIELD_DIMS[0] / 2 + self.x - 0.5 + offset[0]), round(FIELD_DIMS[1] / 2 - self.y - 0.5 - offset[1])
+    def to_top_left(self, offset=(0., 0.)):
+        return round(404 + self.x + offset[0]), round(224 - self.y - offset[1])
 
-    def distanceTo(self, p: 'Point' = None):
-        p = p or Point(0, 0)
-        return math.sqrt((self.x - p.x) ** 2 + (self.y - p.y) ** 2)
+    def distance_to(self, v: 'Vector' = None):
+        v = v or Vector(0, 0)
+        return math.sqrt((self.x - v.x) ** 2 + (self.y - v.y) ** 2)
 
-    def sideOf(self, a: 'Point', b: 'Point'):
+    def side_of(self, a: 'Vector', b: 'Vector'):
         return math.copysign(1, (a.y - self.y) * (b.x - self.x) - (b.y - self.y) * (a.x - self.x))
 
-    def transform(self, shift: 'Point' = None, angle=0.):
-        shift = shift or Point(0, 0)
+    def transform(self, shift: 'Vector' = None, angle=0.):
+        shift = shift or Vector(0, 0)
         sin, cos = math.sin(angle), math.cos(angle)
-        return Point(cos * self.x - sin * self.y, sin * self.x + cos * self.y) + shift
+        return Vector(cos * self.x - sin * self.y, sin * self.x + cos * self.y) + shift
 
-    def invTransform(self, shift: 'Point' = None, angle=0.):
-        shift = shift or Point(0, 0)
+    def inv_transform(self, shift: 'Vector' = None, angle=0.):
+        shift = shift or Vector(0, 0)
         return (self - shift).transform(angle=-angle)
 
     def mirror(self, x=True, y=True):
-        return Point((-1 if x else 1) * self.x, (-1 if y else 1) * self.y)
+        return Vector((-1 if x else 1) * self.x, (-1 if y else 1) * self.y)
 
     def copy(self):
-        return Point(self.x, self.y)
+        return Vector(self.x, self.y)
 
-    def __add__(self, p: 'Point'):
-        return Point(self.x + p.x, self.y + p.y)
+    def __add__(self, v: 'Vector'):
+        return Vector(self.x + v.x, self.y + v.y)
 
-    def __sub__(self, p: 'Point'):
-        return Point(self.x - p.x, self.y - p.y)
+    def __sub__(self, v: 'Vector'):
+        return Vector(self.x - v.x, self.y - v.y)
 
     def __truediv__(self, f: float):
-        return Point(self.x / f, self.y / f)
+        return Vector(self.x / f, self.y / f)
 
     def __mul__(self, f: float):
-        return Point(self.x * f, self.y * f)
+        return Vector(self.x * f, self.y * f)
 
 
-class Line:
-    def __init__(self, a: Point, b: Point):
+class LineSegment:
+    def __init__(self, a: Vector, b: Vector):
         self.a = a
         self.b = b
 
-    def transform(self, shift=Point(0, 0), angle=0.):
-        return Line(self.a.transform(shift, angle), self.b.transform(shift, angle))
+    def transform(self, shift=Vector(0, 0), angle=0.):
+        return LineSegment(self.a.transform(shift, angle), self.b.transform(shift, angle))
 
-    def invTransform(self, shift=Point(0, 0), angle=0.):
-        return Line(self.a.invTransform(shift, angle), self.b.invTransform(shift, angle))
+    def inv_transform(self, shift=Vector(0, 0), angle=0.):
+        return LineSegment(self.a.inv_transform(shift, angle), self.b.inv_transform(shift, angle))
 
-    def intersects(self, l: 'Line'):
-        return self.a.sideOf(l.a, l.b) * self.b.sideOf(l.a, l.b) <= 0 and \
-               l.a.sideOf(self.a, self.b) * l.b.sideOf(self.a, self.b) <= 0
+    def intersects(self, s: 'LineSegment'):
+        return self.a.side_of(s.a, s.b) * self.b.side_of(s.a, s.b) <= 0 and \
+               s.a.side_of(self.a, self.b) * s.b.side_of(self.a, self.b) <= 0
 
     def mirror(self, x=True, y=True):
-        return Line(self.a.mirror(x, y), self.b.mirror(x, y))
+        return LineSegment(self.a.mirror(x, y), self.b.mirror(x, y))
 
 
-class Rectangle:
-    def __init__(self, dims: Point, center=Point(0, 0)):
+class Box:
+    def __init__(self, dims: Vector, center=Vector(0, 0)):
         self.dims = dims
         self.center = center
-        self.radius = (self.dims / 2).distanceTo()
+        self.radius = (self.dims / 2).distance_to()
         self.l, self.r = center.x - dims.x / 2, center.x + dims.x / 2
         self.b, self.t = center.y - dims.y / 2, center.y + dims.y / 2
-        self.corners = [Point(x, y) for x in (self.l, self.r) for y in (self.b, self.t)]
+        self.corners = [Vector(x, y) for x in (self.l, self.r) for y in (self.b, self.t)]
 
-    def contains(self, p: Point):
-        return self.l < p.x < self.r and self.b < p.y < self.t
+    def contains(self, v: Vector):
+        return self.l < v.x < self.r and self.b < v.y < self.t
 
-    def intersects(self, l: Line):
+    def intersects(self, s: LineSegment):
         return not any([
-            l.a.x < self.l and l.b.x < self.l, self.r < l.a.x and self.r < l.b.x,
-            l.a.y < self.b and l.b.y < self.b, self.t < l.a.y and self.t < l.b.y,
-            all([self.l < l.a.x < self.r, self.l < l.b.x < self.r, self.b < l.a.y < self.t, self.b < l.b.y < self.t]),
-            abs(sum(p.sideOf(l.a, l.b) for p in self.corners)) == 4
+            s.a.x < self.l and s.b.x < self.l, self.r < s.a.x and self.r < s.b.x,
+            s.a.y < self.b and s.b.y < self.b, self.t < s.a.y and self.t < s.b.y,
+            all([self.l < s.a.x < self.r, self.l < s.b.x < self.r, self.b < s.a.y < self.t, self.b < s.b.y < self.t]),
+            abs(sum(v.side_of(s.a, s.b) for v in self.corners)) == 4
         ])
 
     def mirror(self, x=True, y=True):
-        return Rectangle(self.dims, self.center.mirror(x, y))
+        return Box(self.dims, self.center.mirror(x, y))
 
 
-def xMirrors(g: Union[Point, Line, Rectangle]):
+def x_mirrors(g: typing.Union[Vector, LineSegment, Box]):
     return [g, g.mirror(True, False)]
 
 
-def yMirrors(g: Union[Point, Line, Rectangle]):
+def y_mirrors(g: typing.Union[Vector, LineSegment, Box]):
     return [g, g.mirror(False, True)]
 
 
-def xyMirrors(g: Union[Point, Line, Rectangle]):
+def xy_mirrors(g: typing.Union[Vector, LineSegment, Box]):
     return [g, g.mirror()]

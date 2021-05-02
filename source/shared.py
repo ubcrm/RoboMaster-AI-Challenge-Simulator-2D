@@ -7,17 +7,7 @@ import os
 SOURCE_DIR = pathlib.Path(os.path.dirname(__file__))
 IMAGE_DIR = SOURCE_DIR / 'assets/images'
 FIELD_DIMS = (808, 448)
-ROBOT_COUNT = 2  # per team
-
-
-class Team(enum.Enum):
-    blue = 0
-    red = 1
-
-
-class RobotNumber(enum.Enum):
-    zero = 0
-    one = 1
+ROBOT_IDS = {0: (0, 0), 1: (0, 1), 2: (1, 0), 3: (1, 1)}
 
 
 class Winner(enum.Enum):
@@ -58,26 +48,17 @@ class RobotState:
 
 @dataclasses.dataclass(frozen=True)
 class TeamState:
-    _zero_state: RobotState
-    _one_state: RobotState
+    robot_states: typing.Tuple[RobotState, ...]
     damage_output: int
-    
-    @property
-    def robot_states(self):
-        return {RobotNumber.zero: self._zero_state, RobotNumber.one: self._one_state}
 
 
 @dataclasses.dataclass(frozen=True)
 class GameState:
-    _blue_state: TeamState
-    _red_state: TeamState
+    blue_state: TeamState
+    red_state: TeamState
     time_remaining: float
-    zone_states: typing.Tuple[ZoneState, ZoneState, ZoneState, ZoneState, ZoneState, ZoneState]
+    zone_states: typing.Tuple[ZoneState, ...]
     winner: Winner
-    
-    @property
-    def team_states(self):
-        return {Team.blue: self._blue_state, Team.red: self._red_state}
 
 
 @dataclasses.dataclass(frozen=True)

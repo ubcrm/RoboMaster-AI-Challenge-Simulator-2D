@@ -1,55 +1,41 @@
-import random
-from game.config import ZONE, TIME
-
-def randomize_zones():
-    self._randomize()
-    self.activation_status = [False] * 6
+import typing
+from game.config import CYCLES, ZONE
+from shared import ZoneType
 
 
 class Zone:
     def __init__(self, index: int):
-        self.rect = ZONE.rects[index]
-        self.type = None
-        self.activation_status = None
+        self.box = ZONE.boxes[index]
+        self.is_activated, self.type_ = None, None
 
-    def apply(self, robots):
-        for robot in robots:
-            if rect.contains(robot.centers) and not activated:
-                self._apply_buff_debuff(robot, robots, type_)
-                self.activation_status[i] = True
+    def reset(self, type_: ZoneType):
+        self.is_activated = False
+        self.type_ = type_
 
-    def _randomize(self):
-        random.seed(time.time())
-        indices = [0, 2, 4]
-        random.shuffle(indices)  # randomly order zones
-        self.types = [0] * 6
+    def apply(self, activating_robot: 'Robot', robots: typing.Tuple['Robot', ...]):  # Buff/Debuff (Rules 2.3.1)
+        self.is_activated = True
+        if self.type_ == ZoneType.blue_hp_buff:
+            for robot in robots:
+                if robot.is_blue:
+                    robot.hp += ZONE.hp_buff
+        elif self.type_ == ZoneType.red_hp_buff:
+            for robot in robots:
+                if not robot.is_blue:
+                    robot.hp += ZONE.hp_buff
+        elif self.type_ == ZoneType.blue_ammo_buff:
+            for robot in robots:
+                if robot.is_blue:
+                    robot.ammo += ZONE.ammo_buff
+        elif self.type_ == ZoneType.red_ammo_buff:
+            for robot in robots:
+                if not robot.is_blue:
+                    robot.ammo += ZONE.ammo_buff
+        elif self.type_ == ZoneType.move_debuff:
+            activating_robot.can_move = False
+            activating_robot.debuff_timeout_cycles = CYCLES.debuff_timeout
+        elif self.type_ == ZoneType.shoot_debuff:
+            activating_robot.can_shoot = False
+            activating_robot.debuff_timeout_cycles = CYCLES.debuff_timeout
 
-        for i in range(3):
-            side = random.choice([0, 1])  # choose left/right side of field
-            self.types[2 * i] = indices[i] + side
-            self.types[2 * i + 1] = indices[i] + 1 - side
 
-    @staticmethod
-    def _apply_buff_debuff(activating_robot, robots, type_):  # Buff/Debuff (Rules 2.3.1)
-        if type_ == ZONE.types['hp_blue']:
-            for robot in robots:
-                if robot.team:
-                    robot.hpBuff += ZONE.hpBuff
-        elif type_ == ZONE.types['hp_red']:
-            for robot in robots:
-                if not robot.team:
-                    robot.hpBuff += ZONE.hpBuff
-        elif type_ == ZONE.types['ammo_blue']:
-            for robot in robots:
-                if robot.team:
-                    robot.ammoBuff += ZONE.ammoBuff
-        elif type_ == ZONE.types['ammo_red']:
-            for robot in robots:
-                if not robot.team:
-                    robot.ammoBuff += ZONE.ammoBuff
-        elif type_ == ZONE.types['no_move']:
-            activating_robot.canMove = False
-            activating_robot.debuffTimeoutCycles = TIME.zone_timeout
-        elif type_ == ZONE.types['no_shoot']:
-            activating_robot.canShoot = False
-            activating_robot.debuffTimeoutCycles = TIME.zone_timeout
+from game.robot import Robot
