@@ -36,6 +36,12 @@ class ROBOT:
         LineSegment(*x_mirrors(Vector(_armor_length / 2, box.dims.y / 2))),
         LineSegment(*x_mirrors(Vector(_armor_length / 2, -box.dims.y / 2))),
         LineSegment(*y_mirrors(Vector(-box.dims.x / 2, _armor_length / 2)))]
+    armor_centers = [  # front, left, right, back
+        Vector(box.dims.x / 2, 0),
+        Vector(0, box.dims.y / 2),
+        Vector(0, -box.dims.y / 2),
+        Vector(-box.dims.x / 2, 0),
+    ]
     armors_damage = [20, 40, 40, 60]
 
     @staticmethod
