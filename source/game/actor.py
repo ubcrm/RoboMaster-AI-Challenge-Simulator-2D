@@ -8,7 +8,7 @@ from source.game.config import FIELD
 from source.game.robot import Robot
 # # from modules.waypoints.navigator import NavigationGraph
 # from modules.waypoints.navigator import Navigator
-from source.shared import FIELD_DIMS, GameState, RobotState
+from source.shared import FIELD_DIMS, GameState, RobotState, RobotCommand
 
 OWNER = 0
 POS_X = 1
@@ -17,21 +17,12 @@ ANGLE = 3
 YAW = 4
 BULLET_COUNT = 10
 
-# B5 = Box(35.4, 35.4, 0, 0, image='images/area/lcm.png')
-# B2 = Box(80, 20, -214, 0, image='images/area/lhm.png')
-# B1 = Box(100, 20, -354, 114, image='images/area/hhu.png')
-# B3 = Box(20, 100, -244, -174, image='images/area/hvu.png')
-# B4 = Box(100, 20, 0, 120.5, image='images/area/hhm.png')
 
-# low_barriers = [B2, B2.mirror(), B5]  # areas B2, B5, B8
-# high_barriers = [B1, B3, B4, B4.mirror(), B3.mirror(), B1.mirror()]  # areas B1, B3, B4, B6, B7, B9
-
-# barrier_vertices = []
-
-'''
-Returns the determinant of the matrix made from two 2d column vectors, det((v0 v1))
-'''
 def det(v0, v1):
+    """
+    Returns the determinant of the matrix made from two 2d column vectors, det((v0 v1))
+    Helper for navigate()
+    """
     return v0[0] * v1[1] - v1[0] * v0[1]
 
 
@@ -76,7 +67,7 @@ class Actor:
         self.is_at_spawn_zone = False
 
         """Variable to hold commands that are passed onto the step function"""
-        self.next_state_commands = [0, 0, 0, 0, 0]
+        self.next_robot_command: RobotCommand = RobotCommand()
 
     def get_robot_state_from_game_state(self, game_state: GameState):
         """
@@ -98,7 +89,7 @@ class Actor:
         Sets up the robots waypoints based on the robot id
         :return:
         """
-        # TODO
+        # TODO finish this function
         pass
 
     def commands_from_state(self, state):
@@ -117,25 +108,24 @@ class Actor:
         #
         # self.prev_commands = commands
         self.move_to(self.centre_waypoint)
-        return self.next_state_commands
+        return self.next_robot_command
 
-    '''
-       @arg pos should be np.array([x, y])
-    '''
     def nearest_waypoint(self, pos):
+        """
+        TODO complete function documentation
+        :param pos: should be np.array([x, y])
+        :return:
+        """
         return np.argmin([np.linalg.norm(node - pos) for node in self.nav.nodes])
 
     def get_path(self, from_waypoint, to_waypoint, avoid_nodes=None):
         path = self.nav.navigate(from_waypoint, to_waypoint, avoid_nodes)
         return self.nav.interpolate(path, 20) if path is not None else None
 
-    '''
-        Sets the destination to the nearest waypoint, stored as the waypoint number
-        @arg dest should be np.array([x, y])
-    '''
     def set_destination(self, dest):
         """
-        Update the robots (x,y) destination co-ordinates
+        Sets the destination to the nearest waypoint, stored as the waypoint number
+        :param dest: should be np.array([x, y])
         """
         self.destination = self.nearest_waypoint(dest)
 
@@ -192,7 +182,7 @@ class Actor:
         :return: The decisions to be made in the next time frame
         """
         self.state = state
-        self.prev_commands = self.next_state_commands
+        self.prev_commands = self.next_robot_command
         self.update_board_zones()
         if self.has_ammo:
             if self.is_hp_zone_active():
@@ -216,11 +206,12 @@ class Actor:
                 self.destination = self.spawn_waypoint
             self.rush_to()
 
-        return self.next_state_commands
+        return self.next_robot_command
 
     def update_board_zones(self):
         """
         Updates the Actor's brain with known values of the buff/debuff zones
+        TODO Update with new kernel implementation
         """
         if self.state.time % TIME.zone_reset == 0:
             if self.robot.is_blue:
@@ -287,12 +278,12 @@ class Actor:
         if scanned_enemies is not None:
             self.aim_then_shoot(scanned_enemies)
         else:
-            # Does not make changes to next_state_command
+            # TODO should set location and rotation delta values to zero to stop movment
             pass
 
     def move_to(self, waypoint=10):
         """
-        TODO Scans the robot's nearby environment for enemies to shoot and sets the robots next_state_commands
+        Scans the robot's nearby environment for enemies to shoot and sets the robots next_state_commands
         such that it moves towards its set waypoint
         :param waypoint:
         :return:
@@ -307,19 +298,25 @@ class Actor:
         x, y, rotate = self.navigate(self.state, pos, dest, [3, 10])
 
         yaw = shoot = 0
-        self.next_state_commands = [x, y, rotate, yaw, shoot]
+        self.next_robot_command = [x, y, rotate, yaw, shoot]
 
     def rush_to(self):
         """
-        TODO Sets robot to navigate to the specified waypoint without checking for enemies
+        Sets robot to navigate to the destination waypoint without checking for enemies
+        Does so by modifying the d
         :param waypoint:
         :return:
+        """
+        """
+        TODO Complete implementation. Should pass in robot coordinates and/or rotation value to navigation
+        system, which returns location and/or rotation delta values for the next_robot_command
         """
         pass
 
     def is_ammo_zone_active(self):
         """
         Checks if the supply zone is has not been activated yet from the current board zone info
+        TODO Update with new kernel implementation
         """
         if self.robot.is_blue:
             return self.state.zones.is_zone_active('ammo_blue')
@@ -329,6 +326,7 @@ class Actor:
     def is_hp_zone_active(self):
         """
         Checks if the ammo zone has not been activated yet from the current board zone info
+        TODO Update with new kernel implementation
         """
         if self.robot.is_blue:
             return self.state.zones.is_zone_active('hp_blue')
@@ -340,6 +338,7 @@ class Actor:
         Check's if the current acting robot can see other robots using camera vision, and returns id of the first
         visible robot
         Returns -1 if no robot can be seen
+        TODO Update with new kernel implementation
         """
         robot_id = self.robot.id_
         robot_coordinates = self.robot.center
@@ -378,6 +377,7 @@ class Actor:
         Check's if the current acting robot can see other robots using camera vision, and returns id of the first
         visible robot
         Returns -1 if no robot can be seen
+        TODO Update with new kernel implementation
         """
         robot_id = self.robot.id_
         robot_coordinates = self.robot.center
