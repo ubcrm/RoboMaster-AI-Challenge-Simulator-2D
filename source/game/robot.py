@@ -112,8 +112,6 @@ class Robot:
                                                                                        rotatation_speed_without_restriction,
                                                                                        self.speed.x, self.speed.y,
                                                                                        self.rotation_speed)
-            # self.yaw_speed = control_response(self.yaw_speed, self.commands[3], ROBOT.yaw_accel, ROBOT.yaw_speed)
-
         if self.can_shoot and self.hp:
             self.is_shooting = bool(command.shoot)
 
