@@ -10,7 +10,7 @@ def get_max_speed_at_current_direction(x_speed_without_restriction, y_speed_with
     x_speed_without_restriction_abs = math.fabs(x_speed_without_restriction)
     y_speed_without_restriction_abs = math.fabs(y_speed_without_restriction)
     rotation_speed_without_restriction_abs = math.fabs(rotation_speed_without_restriction)
-    # needed to be tested and debugged
+    # need to be tested and debugged
     return rotation_max_speed \
            - x_speed_without_restriction_abs * (rotation_max_speed / x_max_speed) \
            - y_speed_without_restriction_abs * (rotation_max_speed / y_max_speed)
