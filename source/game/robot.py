@@ -99,9 +99,6 @@ class Robot:
 
     def control(self, command: 'RobotCommand'):
         if self.can_move and self.hp:
-            # self.speed.x = self._throttle_response(self.speed.x, command.x, MOTION.x_accel, MOTION.x_speed)
-            # self.speed.y = self._throttle_response(self.speed.y, command.y, MOTION.y_accel, MOTION.y_speed)
-            # self.rotation_speed = self._throttle_response(self.rotation_speed, command.rotation, MOTION.rotation_accel, MOTION.rotation_speed)
             self.gimbal_yaw_speed = self._throttle_response(self.gimbal_yaw_speed, command.gimbal_yaw, MOTION.gimbal_yaw_accel,
                                                             MOTION.gimbal_yaw_speed)
             x_speed_without_restriction = self._throttle_response(self.speed.x, command.x, MOTION.x_accel, MOTION.x_speed)
