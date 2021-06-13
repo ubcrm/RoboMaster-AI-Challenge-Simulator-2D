@@ -10,7 +10,7 @@ def get_max_speed_at_current_direction(x_speed_without_restriction, y_speed_with
     x_speed_without_restriction_abs = math.fabs(x_speed_without_restriction)
     y_speed_without_restriction_abs = math.fabs(y_speed_without_restriction)
     rotation_speed_without_restriction_abs = math.fabs(rotation_speed_without_restriction)
-    # needed to be tested and degugged
+    # needed to be tested and debugged
     return rotation_max_speed \
            - x_speed_without_restriction_abs * (rotation_max_speed / x_max_speed) \
            - y_speed_without_restriction_abs * (rotation_max_speed / y_max_speed)
@@ -112,6 +112,7 @@ class Robot:
                                                                                        rotatation_speed_without_restriction,
                                                                                        self.speed.x, self.speed.y,
                                                                                        self.rotation_speed)
+            # also might needed to be tested and debugged here
         if self.can_shoot and self.hp:
             self.is_shooting = bool(command.shoot)
 
