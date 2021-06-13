@@ -6,6 +6,15 @@ from game.bullet import Bullet
 from game.config import ROBOT, MOTION, CYCLES, BULLET, FIELD
 from shared import RobotState
 
+def get_max_speed_at_current_direction(x_speed_without_restriction, y_speed_without_restriction, rotation_speed_without_restriction, x_max_speed, y_max_speed, rotation_max_speed):
+    x_speed_without_restriction_abs = math.fabs(x_speed_without_restriction)
+    y_speed_without_restriction_abs = math.fabs(y_speed_without_restriction)
+    rotation_speed_without_restriction_abs = math.fabs(rotation_speed_without_restriction)
+    # needed to be tested and degugged
+    return rotation_max_speed \
+           - x_speed_without_restriction_abs * (rotation_max_speed / x_max_speed) \
+           - y_speed_without_restriction_abs * (rotation_max_speed / y_max_speed)
+
 
 class Robot:
     def __init__(self, id_: int):
@@ -90,13 +99,33 @@ class Robot:
 
     def control(self, command: 'RobotCommand'):
         if self.can_move and self.hp:
-            self.speed.x = self._throttle_response(self.speed.x, command.x, MOTION.x_accel, MOTION.x_speed)
-            self.speed.y = self._throttle_response(self.speed.y, command.y, MOTION.y_accel, MOTION.y_speed)
-            self.rotation_speed = self._throttle_response(self.rotation_speed, command.rotation, MOTION.rotation_accel, MOTION.rotation_speed)
+            # self.speed.x = self._throttle_response(self.speed.x, command.x, MOTION.x_accel, MOTION.x_speed)
+            # self.speed.y = self._throttle_response(self.speed.y, command.y, MOTION.y_accel, MOTION.y_speed)
+            # self.rotation_speed = self._throttle_response(self.rotation_speed, command.rotation, MOTION.rotation_accel, MOTION.rotation_speed)
             self.gimbal_yaw_speed = self._throttle_response(self.gimbal_yaw_speed, command.gimbal_yaw, MOTION.gimbal_yaw_accel,
                                                             MOTION.gimbal_yaw_speed)
+            x_speed_without_restriction = self._throttle_response(self.speed.x, command.x, MOTION.x_accel, MOTION.x_speed)
+            y_speed_without_restriction = self._throttle_response(self.speed.y, command.y, MOTION.y_accel, MOTION.y_speed)
+            rotatation_speed_without_restriction = self._throttle_response(self.rotation_speed, command.rotation, MOTION.rotation_accel, MOTION.rotation_speed)
+            self.speed.x, self.speed.y, self.rotation_speed = self.cap_speed_under_max(x_speed_without_restriction,
+                                                                                       y_speed_without_restriction,
+                                                                                       rotatation_speed_without_restriction,
+                                                                                       self.speed.x, self.speed.y,
+                                                                                       self.rotation_speed)
+            # self.yaw_speed = control_response(self.yaw_speed, self.commands[3], ROBOT.yaw_accel, ROBOT.yaw_speed)
+
         if self.can_shoot and self.hp:
             self.is_shooting = bool(command.shoot)
+
+
+    def cap_speed_under_max(self, x_speed_without_restriction, y_speed_without_restriction, rotatation_speed_without_restriction , x_max_speed, y_max_speed, rotatation_max_speed):
+        multiplier = 1
+        current_speed_without_restriction_abs = math.sqrt(math.pow(x_speed_without_restriction, 2) + math.pow(y_speed_without_restriction, 2)  + math.pow(y_speed_without_restriction, 2))
+        max_speed_at_current_direction = get_max_speed_at_current_direction(x_speed_without_restriction, y_speed_without_restriction, rotatation_speed_without_restriction, x_max_speed, y_max_speed, rotatation_max_speed)
+        if(max_speed_at_current_direction < current_speed_without_restriction_abs):
+            multiplier = max_speed_at_current_direction / current_speed_without_restriction_abs
+        return x_speed_without_restriction * multiplier, y_speed_without_restriction * multiplier, rotatation_speed_without_restriction * multiplier
+
 
     def cycle(self, cycles_remaining: int, robots: typing.Tuple['Robot', ...]):
         self.debuff_timeout_cycles -= min(1, self.debuff_timeout_cycles)
