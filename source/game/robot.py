@@ -112,7 +112,7 @@ class Robot:
                                                                                        rotatation_speed_without_restriction,
                                                                                        self.speed.x, self.speed.y,
                                                                                        self.rotation_speed)
-            # also might needed to be tested and debugged here
+            # also might need to be tested and debugged here
         if self.can_shoot and self.hp:
             self.is_shooting = bool(command.shoot)
 
