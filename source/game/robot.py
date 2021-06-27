@@ -10,35 +10,56 @@ def get_max_speed_at_current_direction(x_speed_without_restriction, y_speed_with
     x_speed_without_restriction_abs = math.fabs(x_speed_without_restriction)
     y_speed_without_restriction_abs = math.fabs(y_speed_without_restriction)
     rotation_speed_without_restriction_abs = math.fabs(rotation_speed_without_restriction)
-    # need to be tested and debugged
+
+    print("in get_max_speed_at_current_direction")
     print("x_speed_without_restriction_abs")
-    print("rotation_max_speed")
-    print("x_speed_without_restriction_abs")
-    print("rotation_max_speed")
-    print("x_max_speed")
     print("y_speed_without_restriction_abs")
+    print("rotation_speed_without_restriction")
+    print("x_max_speed")
     print("y_max_speed")
     print("rotation_max_speed")
     print(x_speed_without_restriction_abs)
-    print(rotation_max_speed)
-    print(x_max_speed)
     print(y_speed_without_restriction_abs)
+    print(rotation_speed_without_restriction)
+    print(x_max_speed)
     print(y_max_speed)
+    print(rotation_max_speed)
 
-    return math.sqrt(
-                math.pow(
-                    (rotation_max_speed -
-                    x_speed_without_restriction_abs * (rotation_max_speed / x_max_speed) -
-                    y_speed_without_restriction_abs * (rotation_max_speed / y_max_speed)) ,2) +\
-                math.pow(
-                    (x_max_speed -
-                    rotation_speed_without_restriction * (x_max_speed / rotation_max_speed) -
-                    y_speed_without_restriction_abs * (x_max_speed / y_max_speed)) ,2) +\
-                math.pow(
-                    (y_max_speed -
-                    rotation_speed_without_restriction * (y_max_speed / rotation_max_speed) -
-                    x_speed_without_restriction_abs * (y_max_speed / x_max_speed)) ,2)
-                )
+    percentageX = x_speed_without_restriction_abs / x_max_speed
+    percentageY = y_speed_without_restriction_abs / y_max_speed
+    percentageR = rotation_speed_without_restriction_abs / rotation_max_speed
+
+    totalPercentage = percentageX + percentageY + percentageR # can be greater than 1
+    print("total percentage")
+    print(totalPercentage)
+    print("percentageX")
+    print(percentageX)
+    print("percentageY")
+    print(percentageY)
+    print("percentageR")
+    print(percentageR)
+    if(totalPercentage > 1):
+        print("need to reduce ---------------------------------------------------")
+        return (math.sqrt( math.pow(x_speed_without_restriction / totalPercentage, 2) + math.pow(y_speed_without_restriction / totalPercentage, 2) + math.pow(rotation_speed_without_restriction / totalPercentage, 2)))
+    else:
+        print("no need to reduce")
+        return math.sqrt( math.pow(x_speed_without_restriction, 2) + math.pow(y_speed_without_restriction, 2) + math.pow(rotation_speed_without_restriction, 2))
+
+    # return math.sqrt(
+    #             math.pow(
+    #                 (rotation_max_speed -
+    #                 x_speed_without_restriction_abs * (rotation_max_speed / x_max_speed) -
+    #                 y_speed_without_restriction_abs * (rotation_max_speed / y_max_speed)) ,2) +\
+    #             math.pow(
+    #                 (x_max_speed -
+    #                 rotation_speed_without_restriction * (x_max_speed / rotation_max_speed) -
+    #                 y_speed_without_restriction_abs * (x_max_speed / y_max_speed)) ,2) +\
+    #             math.pow(
+    #                 (y_max_speed -
+    #                 rotation_speed_without_restriction * (y_max_speed / rotation_max_speed) -
+    #                 x_speed_without_restriction_abs * (y_max_speed / x_max_speed)) ,2)
+    #             )
+
 
 
 class Robot:
@@ -126,17 +147,28 @@ class Robot:
         if self.can_move and self.hp:
             self.gimbal_yaw_speed = self._throttle_response(self.gimbal_yaw_speed, command.gimbal_yaw, MOTION.gimbal_yaw_accel,
                                                             MOTION.gimbal_yaw_speed)
-            x_speed_without_restriction = self._throttle_response2(self.speed.x, command.x, MOTION.x_accel, MOTION.x_speed, command.x ,command.y ,command.rotation, MOTION.x_accel, MOTION.y_accel, MOTION.rotation_accel)
+            print("begin")
+            print("call _throttle_response2 0-1 x")
+            x_speed_without_restriction = self._throttle_response2(self.speed.x, command.x, MOTION.x_accel, MOTION.x_speed, command.x ,command.y ,command.rotation, 1, 1, 1)# MOTION.x_accel, MOTION.y_accel, MOTION.rotation_accel)
+            print("call _throttle_response2 0-1 y")
+            y_speed_without_restriction = self._throttle_response2(self.speed.y, command.y, MOTION.y_accel, MOTION.y_speed, command.x ,command.y ,command.rotation, 1, 1, 1)# MOTION.x_accel, MOTION.y_accel, MOTION.rotation_accel)
+            print("call _throttle_response2 0-1 rotate")
+            rotatation_speed_without_restriction = self._throttle_response2(self.rotation_speed, command.rotation, MOTION.rotation_accel, MOTION.rotation_speed, command.x ,command.y ,command.rotation,1, 1, 1)# MOTION.x_accel, MOTION.y_accel, MOTION.rotation_accel)
+
             print("x_speed_without_restriction in method control")
             print(x_speed_without_restriction)
-            y_speed_without_restriction = self._throttle_response2(self.speed.y, command.y, MOTION.y_accel, MOTION.y_speed, command.x ,command.y ,command.rotation, MOTION.x_accel, MOTION.y_accel, MOTION.rotation_accel)
-            rotatation_speed_without_restriction = self._throttle_response2(self.rotation_speed, command.rotation, MOTION.rotation_accel, MOTION.rotation_speed, command.x ,command.y ,command.rotation, MOTION.x_accel, MOTION.y_accel, MOTION.rotation_accel)
+            print("y_speed_without_restriction in method control")
+            print(rotatation_speed_without_restriction)
+            print("rotatation_speed_without_restriction in method control")
+            print(rotatation_speed_without_restriction)
+            print("call cap_speed_under_max 0-1")
             self.speed.x, self.speed.y, self.rotation_speed = self.cap_speed_under_max(x_speed_without_restriction,
                                                                                        y_speed_without_restriction,
                                                                                        rotatation_speed_without_restriction,
                                                                                        MOTION.x_speed,
                                                                                        MOTION.y_speed,
                                                                                        MOTION.rotation_speed)
+            print("out cap_speed_under_max 1-0")
             # also might need to be tested and debugged here
         if self.can_shoot and self.hp:
             self.is_shooting = bool(command.shoot)
@@ -144,9 +176,10 @@ class Robot:
 
     def cap_speed_under_max(self, x_speed_without_restriction, y_speed_without_restriction, rotatation_speed_without_restriction , x_max_speed, y_max_speed, rotatation_max_speed):
         multiplier = 1
-        print("x_speed_without_restriction")
-        print("y_speed_without_restriction")
-        print("rotatation_speed_without_restriction")
+        print("in cap_speed_under_max 1")
+        print("x_speed_without_restriction in cap_speed_under_max")
+        print("y_speed_without_restriction in cap_speed_under_max")
+        print("rotatation_speed_without_restriction in cap_speed_under_max")
         print(x_speed_without_restriction)
         print(y_speed_without_restriction)
         print(rotatation_speed_without_restriction)
@@ -164,20 +197,21 @@ class Robot:
         print(x_speed_without_restriction_square)
         print(y_speed_without_restriction_square)
         print(rotatation_speed_without_restriction_square)
-
+        print("call get_max_speed_at_current_direction 1-1")
         max_speed_at_current_direction = get_max_speed_at_current_direction(x_speed_without_restriction,
                                                                             y_speed_without_restriction,
                                                                             rotatation_speed_without_restriction,
                                                                             x_max_speed,
                                                                             y_max_speed,
                                                                             rotatation_max_speed)
-        print("no need to reduced speed")
+        print("out get_max_speed_at_current_direction 2-1")
+        print("no need to reduce speed")
         print("max_speed_at_current_direction")
         print("current_speed_without_restriction_abs")
         print(max_speed_at_current_direction)
         print(current_speed_without_restriction_abs)
         if(max_speed_at_current_direction < current_speed_without_restriction_abs):
-            print("needed to reduced speed")
+            print("needed to reduce speed====================================================================================")
             print("max_speed_at_current_direction")
             print("current_speed_without_restriction_abs")
             print(max_speed_at_current_direction)
@@ -220,7 +254,9 @@ class Robot:
     def _throttle_response2(speed: float, throttle: float, top_accel: float, top_speed: float, throttleX: float, throttleY: float, throttleR: float, throttleXMax: float, throttleYMax: float, throttleRMax: float ):
         accelerationWithoutRestriction = math.sqrt(math.pow(throttleX,2) + math.pow(throttleY,2) + math.pow(throttleR,2))
         restrictionAtCurrentDirection = get_max_speed_at_current_direction(throttleX, throttleY, throttleR, throttleXMax, throttleYMax, throttleRMax)
+        print("no need to reduce acceleration")
         if(accelerationWithoutRestriction > restrictionAtCurrentDirection):
+            print("needed to reduce acceleration |||||||||||||||||||||| |||||||||||||||||||||| ||||||||||||||||||||||")
             top_accel=top_accel * (restrictionAtCurrentDirection / accelerationWithoutRestriction)
         new_speed = speed + (throttle - speed / top_speed) * top_accel
         return math.copysign(min(abs(new_speed), top_speed), new_speed)
